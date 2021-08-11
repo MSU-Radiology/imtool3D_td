@@ -1,3 +1,4 @@
+%% imtool3D_BIDS
 function imtool3D_BIDS(BidsFolder)
 % Viewer for BIDS folders
 %  imtool3D_BIDS                 Opens a file browser to select a BIDS directory
@@ -40,7 +41,9 @@ filterDatabase(BIDS,tsub,tses,tmodality,tsequence,'sub');
 % Add view button
 btn_view = uicontrol(plb,'Style','pushbutton','String','view','Units','normalized','Position',[0.9 0 0.1 .3],'BackgroundColor',[0, 0.65, 1]);
 btn_view.Callback = @(hobj,evnt) viewCallback(tool, BIDS,tsub,tses,tmodality,tsequence);
+end
 
+%% filterDatabase
 function filterDatabase(BIDS,tsub,tses,tmodality,tsequence,listbox)
 if strcmp(listbox,'sub')
     tses.String = unique(bids.query(BIDS,'sessions','sub',tsub.String{tsub.Value(1)}));
@@ -58,7 +61,9 @@ else
     tsequence.String = bids.query(BIDS,'types','sub',tsub.String(tsub.Value),'ses',tses.String(tses.Value),'modality',tmodality.String(tmodality.Value));
 end
 tsequence.Value(tsequence.Value>length(tsequence.String)) = [];
+end
 
+%% viewCallback
 function viewCallback(tool3P, BIDS,tsub,tses,tmodality,tsequence)
 ht = wait_msgbox;
 if isempty(tses.String(tses.Value)) % no sessions
@@ -80,7 +85,9 @@ for ii=1:length(tool)
     tool(ii).label = list;
 end
 if ishandle(ht), delete(ht); end
+end
 
+%% wait_msgbox
 function h = wait_msgbox
 txt = 'Loading files. Please wait...';
 h=figure('units','norm','position',[.5 .75 .2 .2],'menubar','none','numbertitle','off','resize','off','units','pixels');
@@ -92,4 +99,5 @@ set(h,'position',[hpos(1)-hext2(1)/2,hpos(2)-hext2(2)/2,hext2(1),hext2(2)]);
 set(ha,'position',[30 30 hext(end-1:end)]);
 disp(char(txt));
 drawnow;
+end
 

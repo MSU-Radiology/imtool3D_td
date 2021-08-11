@@ -1,23 +1,25 @@
+%% imtool3DROI_rect class
 classdef imtool3DROI_rect < imtool3DROI
-    
+    %% Public Properties
     properties
         fixedAspectRatio = false;
     end
     
+    %% Protected Properties
     properties (SetAccess = protected, GetAccess = protected)
         position        %defines the center of the box and its width/height [cx cy width height]
         tbuff           %amount of space (in pixels) to place the text above the ROI
     end
     
+    %% Dependent Properties
     properties (Dependent = true, Access = public)
         aspectRatio
     end
     
+    %% Public Class Methods
     methods
-        
-        %constructor
+        %% Constructor
         function ROI = imtool3DROI_rect(varargin)
-            
             switch nargin
                 case 0  %use the current figure
                     
@@ -121,13 +123,14 @@ classdef imtool3DROI_rect < imtool3DROI
             
             %update the text
             newPosition(ROI,position)
-            
         end
         
+        %% getPosition
         function position = getPosition(ROI)
             position = ROI.position;
         end
         
+        %% newPosition
         function newPosition(ROI,position, notifoff)
             
             %Adjust the position if the aspect ratio should be fixed
@@ -179,16 +182,16 @@ classdef imtool3DROI_rect < imtool3DROI
             if ~exist('notifoff','var') || ~notifoff
                 notify(ROI,'newROIPosition');
             end
-            
-            
         end
         
+        %% newPositionSameSize
         function newPositionSameSize(ROI,pos)
             position = ROI.position;
             position(1:2)=pos;
             newPosition(ROI,position);
         end
         
+        %% getPoly
         function [x, y] = getPoly(ROI)
             %get the position
             position = ROI.position;
@@ -201,6 +204,7 @@ classdef imtool3DROI_rect < imtool3DROI
             y = [pos(2) pos(2) pos(2)+pos(4) pos(2)+pos(4) pos(2)];
         end
         
+        %% getMeasurements
         function stats = getMeasurements(ROI)
             [x, y] = getPoly(ROI);
             im = double(get(ROI.imageHandle,'CData'));
@@ -224,14 +228,18 @@ classdef imtool3DROI_rect < imtool3DROI
             stats.mask = mask;
             stats.area = sum(mask(:));
             stats.position = ROI.position;
-            
         end
         
+        %% handlePropEvents
         function handlePropEvents(ROI,~,~)
             position = getPosition(ROI); %#ok<*PROPLC>
             newPosition(ROI,position);
         end
         
+        %% set.fixedAspectRatio
+        % TODO: It would be appropriate to organize all of the class 
+        % property getters/setters together in a contiguous block in the 
+        % source file
         function set.fixedAspectRatio(ROI,fixedAspectRatio)
             %Set the fixed aspect ratio property
             ROI.fixedAspectRatio = fixedAspectRatio;
@@ -247,11 +255,16 @@ classdef imtool3DROI_rect < imtool3DROI
             end
         end
         
+        %% get.aspectRatio
+        % TODO: It would be appropriate to organize all of the class 
+        % property getters/setters together in a contiguous block in the 
+        % source file
         function aspectRatio = get.aspectRatio(ROI)
             position = ROI.position; %#ok<*PROP>
             aspectRatio = position(3)/position(4);
         end
         
+        %% getBoundingBox
         function BB = getBoundingBox(ROI)
             %BB = [rowMin rowMax; colMin ColMax];
             
@@ -278,16 +291,16 @@ classdef imtool3DROI_rect < imtool3DROI
                 end
             end
             BB = [rowMin rowMax; colMin colMax];
-            
-            
-            
-            
         end
-        
     end
-        
 end
 
+%% Non-Class Helper Functions
+% TODO: Consider whether these should really be separate or if they should
+% be static methods of the class. If they don't belong in the class,
+% perhaps they should be in a separate file.
+
+%% ButtonDownFunction
 function ButtonDownFunction(~,~,ROI,n)
 
 %get the parent figure handle
@@ -308,6 +321,7 @@ if strcmp(click,'normal')
 end
 end
 
+%% ButtonMotionFunction
 function ButtonMotionFunction(~,~,ROI,n)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 
@@ -491,12 +505,14 @@ newPosition(ROI,position);
 
 end
 
+%% ButtonUpFunction
 function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
 notify(ROI,'newROIPositionUp');
 end
 
+%% contextMenuCallback
 function contextMenuCallback(source,~,ROI, tool)
 
 switch get(source,'Label')

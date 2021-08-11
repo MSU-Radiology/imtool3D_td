@@ -1,15 +1,14 @@
+%% imtool3DROI_ellipse class
 classdef imtool3DROI_ellipse < imtool3DROI_rect
-    
+    %% Protected Properties
     properties (SetAccess = protected, GetAccess = protected)
         nPoints = 20;   %number of points to use to define the polygon that makes the elliptical mask 
     end
     
-   
-    
+    %% Public Class Methods
     methods
-        %constructor
+        %% Constructor
         function ROI = imtool3DROI_ellipse(varargin)
-            
             switch nargin
                 case 0  %use the current figure
                     
@@ -75,11 +74,10 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
             for i=1:length(ROI.graphicsHandles)
                 fun = @(hObject,evnt) ButtonDownFunction(hObject,evnt,ROI,i); set(ROI.graphicsHandles(i),'ButtonDownFcn',fun);
             end
-            
         end
         
+        %% newPosition
         function newPosition(ROI,position)
-            
             %set the position property of the ROI
             ROI.position = position;
             
@@ -127,6 +125,7 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
             notify(ROI,'newROIPosition');
         end
         
+        %% getPoly
         function [x, y] = getPoly(ROI)
             %get the position
             position = ROI.position;
@@ -134,7 +133,8 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
             %make the polygon
             [x,y] = getEllipsePoints(position,ROI.nPoints,'nPoints');
         end
-
+        
+        %% getMeasurements
         function stats = getMeasurements(ROI)
             [x, y] = getPoly(ROI);
             im = double(get(ROI.imageHandle,'CData'));
@@ -157,9 +157,9 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
             stats.mask = mask;
             stats.area = sum(mask(:));
             stats.position = ROI.position;
-            
         end
         
+        %% autoCenterROI
         function varargout = autoCenterROI(ROI,varargin)
             Tforeground = .2;
             Tbackground = .8;
@@ -237,9 +237,9 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
                 case 1
                     varargout{1} = success;
             end
-            
         end
         
+        %% autoCenterROIFindCircleMethod
         function success = autoCenterROIFindCircleMethod(ROI,circleRange)
             rescale=4;
             %Get the image
@@ -270,16 +270,16 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
             else
                 success=false;
             end
-                
-            
         end
-       
-        
     end
-    
-    
 end
 
+%% Non-Class Helper Functions
+% TODO: Consider whether these should really be separate or if they should
+% be static methods of the class. If they don't belong in the class,
+% perhaps they should be in a separate file.
+
+%% getEllipsePoints
 function [x,y] = getEllipsePoints(position,t,mode)
 %This function returns a list of vertices of an elliptical polygon with
 %nPoints number of vertices;
@@ -292,6 +292,7 @@ x = a*cos(t); x = x+position(1);
 y = b*sin(t); y = y+position(2);
 end
 
+%% ButtonDownFunction
 function ButtonDownFunction(~,~,ROI,n)
 
 %get the parent figure handle
@@ -312,6 +313,7 @@ if strcmp(click,'normal')
 end
 end
 
+%% ButtonMotionFunction
 function ButtonMotionFunction(~,~,ROI,n)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 
@@ -507,6 +509,7 @@ newPosition(ROI,position);
 
 end
 
+%% ButtonUpFunction
 function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 

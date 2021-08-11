@@ -1,3 +1,4 @@
+%% imtool3D_nii_crop
 function imtool3D_nii_crop(filename)
 % imtool3D_nii_crop     crop a nifti image
 %   imtool3D_nii_crop(filename) opens a .nii(.gz) file in a imtool3D_3plane 
@@ -80,3 +81,4 @@ nii.hdr.srow_z(4) = nii.hdr.srow_z(4) + ...
                 
 % Save into NIFTI file with suffix _crop
 nii_tool('save',nii,[strrep(strrep(filename,'.nii.gz',''),'.nii','') '_crop.nii'])
+end

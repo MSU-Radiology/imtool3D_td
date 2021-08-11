@@ -1,3 +1,4 @@
+%% imtool3D_3planes_rect
 function RECTS = imtool3D_3planes_rect(tool)
 % imtool3D_3planes_crop(tool) adds a synchronized rectangle to the imtool
 % object created by imtool3D_3planes

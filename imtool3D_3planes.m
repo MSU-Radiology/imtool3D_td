@@ -1,3 +1,4 @@
+%% imtool3D_3planes class
 classdef imtool3D_3planes < handle
 % imtool3D_3planes(I,mask,parent,range) image viewer with synchronised
 % axial, saggital and coronal view
@@ -19,18 +20,21 @@ classdef imtool3D_3planes < handle
 %   tool = imtool3D_3planes(I,mask{1}) 
 %   tool.setOrient('horizontal'); % medical orientation
 
+    %% Private Properties
     properties (SetAccess = private, GetAccess = private)
         tool  % 1x3 imtool3D objects
         cross % cross structure
         HelpAnnotation
     end
     
+    %% Public Properties
     properties
         crossVisible=1; %Show cross?
     end
     
+    %% Public Class Methods
     methods
-        
+        %% imtool3D_3planes Constructor
         function tool3P = imtool3D_3planes(varargin) % Constructor (dat,mask,parent,range)
             % parse inputs
             dat=[];
@@ -239,9 +243,9 @@ classdef imtool3D_3planes < handle
             % change Help
             fun = @(hObject,evnt) showhelpannotation(tool3P);
             set(tool(1).getHandles.Tools.Help,'Callback',fun)
-
         end
         
+        %% getTool
         function tool = getTool(tool3P,plane)
             if ~exist('plane','var'), plane = []; end
             if isempty(plane)
@@ -261,28 +265,33 @@ classdef imtool3D_3planes < handle
             end
         end
         
+        %% getHandles
         function H = getHandles(tool3P)
             H = getHandles(tool3P.tool(1));
         end
         
+        %% setlabel
         function setlabel(tool3P,label)
             for ii=1:length(tool3P.tool)
                 tool3P.tool(ii).setlabel(label);
             end
         end
         
+        %% setAspectRatio
         function setAspectRatio(tool3P,pixdim)
             for ii=1:length(tool3P.tool)
                 tool3P.tool(ii).setAspectRatio(pixdim);
             end
         end
         
+        %% setOrient
         function setOrient(tool3P,orient)
             for ii=1:length(tool3P.tool)
                 tool3P.tool(ii).setOrient(orient);
             end
         end
-
+        
+        %% setPlaneDisposition
         function setPlaneDisposition(tool3P,M)
             % get limits
             PosC = [inf, inf; -inf -inf];
@@ -302,14 +311,17 @@ classdef imtool3D_3planes < handle
             end
         end
         
+        %% getNvolMax
         function NvolMax = getNvolMax(tool3P)
             NvolMax = tool3P.tool(1).getNvolMax();
         end
         
+        %% getNvol
         function Nvol = getNvol(tool3P)
             Nvol = tool3P(1).getNvol();
         end
-
+        
+        %% setNvol
         function setNvol(tool3P,Nvol)
             for ii = [2 3 1]
                 tool3P.tool(ii).setNvol(Nvol,ii==1)
@@ -320,8 +332,8 @@ classdef imtool3D_3planes < handle
             end
         end
         
+        %% showcross
         function showcross(tool3P)            
-            
             tool = tool3P.tool;
             S = tool(1).getImageSize;
             set(tool3P.cross.X1,'XData',[tool(3).getCurrentSlice tool(3).getCurrentSlice])
@@ -344,6 +356,7 @@ classdef imtool3D_3planes < handle
             end
         end
         
+        %% hidecross
         function hidecross(tool3P,type)
             if ~exist('type','var'), type = 'off'; end
             set(tool3P.cross.X1,'Visible',type)
@@ -354,16 +367,19 @@ classdef imtool3D_3planes < handle
             set(tool3P.cross.Y3,'Visible',type)
         end
         
+        %% getImage
         function I = getImage(tool3P,varargin)
             I = tool3P.tool(1).getImage(varargin{:});
         end
         
+        %% setImage
         function setImage(tool3P,I)
             for ii=1:3
                 tool3P.tool(ii).setImage(I);
             end
         end
         
+        %% addImage
         function addImage(tool3P,I)
             Iold = tool3P.tool(1).getImage(1);
             
@@ -372,6 +388,7 @@ classdef imtool3D_3planes < handle
             end
         end
         
+        %% setrescaleFactor
         function setrescaleFactor(tool3P,factor)
             for ii=1:length(tool3P.tool)
                 tool3P.tool(ii).rescaleFactor = factor;
@@ -379,7 +396,9 @@ classdef imtool3D_3planes < handle
         end
     end
     
+    %% Private Class Methods
     methods(Access = private)
+        %% syncSlices
         function syncSlices(tool3P)
             persistent timer
             if isempty(timer), timer=tic; end
@@ -408,6 +427,12 @@ classdef imtool3D_3planes < handle
     end
 end
 
+%% Non-Class Helper Functions
+% TODO: Consider whether these should really be separate or if they should
+% be static methods of the class. If they don't belong in the class,
+% perhaps they should be in a separate file.
+
+%% setWL
 function setWL(tool)
 L=str2num(get(tool(1).getHandles.Tools.L,'String'));
 U=str2num(get(tool(1).getHandles.Tools.U,'String'));
@@ -416,6 +441,7 @@ for ii=2:3
 end
 end
 
+%% scrollWheel
 function scrollWheel(src, evnt, tool)
 currentobj = hittest;
 for ii=1:length(tool)
@@ -432,6 +458,7 @@ for ii=1:length(tool)
 end
 end
 
+%% shortcutCallback
 function shortcutCallback(hobject, event,tool3P)
 tool = tool3P.getTool();
 switch event.Key
@@ -465,7 +492,7 @@ switch event.Key
 end
 end
 
-% change left button mode
+%% lbosection (change left button mode)
 function lboselection(source,event,tool3P,ContrastWBDF)
 tool = tool3P.getTool();
 for ii = 1:3
@@ -481,6 +508,7 @@ for ii = 1:3
 end
 end
 
+%% BTF_syncSlices
 function BTF_syncSlices(src,evnt,ContrastWBDF,tool3P)
 tool = tool3P.getTool();
 fig = tool(1).getHandles.fig;
@@ -498,12 +526,14 @@ switch get(fig,'SelectionType')
 end
 end
 
+%% Callback3
 function Callback3(CB1,CB2,CB3,varargin)
 CB3(varargin{:})
 CB1(varargin{:})
 CB2(varargin{:})
 end
 
+%% syncMasks
 function syncMasks(tool,ic)
 persistent timer
 if isempty(timer), timer=tic; end
@@ -515,6 +545,7 @@ for ii=setdiff(1:3,ic)
 end
 end
 
+%% showhelpannotation
 function showhelpannotation(tool3P)
 tool = tool3P.tool;
 set(tool(1).getHandles.Tools.Help, 'Enable', 'off');

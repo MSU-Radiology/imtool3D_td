@@ -1,6 +1,8 @@
+%% imtool3DROI class
 classdef imtool3DROI < handle
     %This is an abstract class for the ROI tools used in imtool3D
     
+    %% Public Properties
     properties (SetObservable = true)
         imageHandle
         axesHandle
@@ -13,20 +15,20 @@ classdef imtool3DROI < handle
         lineColor = 'y';
         markerColor = 'r';
         visible = true;
-        textVisible = true; %this property is a slave to visible (i.e., if visible is false, the text will not be visible even if textVisible is true)
+        textVisible = true; %this property is subordinate to visible (i.e., if visible is false, the text will not be visible even if textVisible is true)
     end
     
+    %% Events
     events
         ROIdeleted
         newROIPosition
         newROIPositionUp
     end
     
+    %% Public Class Methods
     methods
-        
-        %Constructor
+        %% Constructor
         function ROI = imtool3DROI(imageHandle,graphicsHandles,menuLabels,menuFunction,varargin)
-            
             %Set the properties
             ROI.imageHandle = imageHandle;
             ROI.graphicsHandles = graphicsHandles;
@@ -66,11 +68,12 @@ classdef imtool3DROI < handle
             for i=1:length(menuLabels)
                 ROI.menuHandles(i) = uimenu('Parent',c,'Label',menuLabels{i},'Callback',menuFunction);
             end
-            
-            
-            
         end
         
+        %% set.lineColor
+        % TODO: It would be appropriate to organize all of the class 
+        % property getters/setters together in a contiguous block in the 
+        % source file
         function set.lineColor(ROI,lineColor)
             ROI.lineColor = lineColor;
             graphicsHandles = ROI.graphicsHandles;
@@ -87,6 +90,10 @@ classdef imtool3DROI < handle
             end
         end
         
+        %% set.markerColor
+        % TODO: It would be appropriate to organize all of the class 
+        % property getters/setters together in a contiguous block in the 
+        % source file
         function set.markerColor(ROI,markerColor)
             ROI.markerColor = markerColor;
             graphicsHandles = ROI.graphicsHandles;
@@ -101,6 +108,10 @@ classdef imtool3DROI < handle
             end
         end
         
+        %% set.visible
+        % TODO: It would be appropriate to organize all of the class 
+        % property getters/setters together in a contiguous block in the 
+        % source file
         function set.visible(ROI,visible)
             ROI.visible=visible;
             if visible
@@ -123,11 +134,12 @@ classdef imtool3DROI < handle
             else
                 set(ROI.textHandle,'Visible','off');
             end
-            
-            
-            
         end
         
+        %% set.textVisible
+        % TODO: It would be appropriate to organize all of the class 
+        % property getters/setters together in a contiguous block in the 
+        % source file
         function set.textVisible(ROI,textVisible)
             ROI.textVisible=textVisible;
             if textVisible
@@ -148,19 +160,26 @@ classdef imtool3DROI < handle
             end
         end
         
-        %Destructor
+        %% Destructor
         function delete(ROI)
             try
                 delete(ROI.graphicsHandles);
                 delete(ROI.textHandle);
                 delete(ROI.listenerHandle);
                 notify(ROI,'ROIdeleted');
+            catch ex
+                warning(ex);
             end
         end
     end
-    
 end
 
+%% Non-Class Helper Functions
+% TODO: Consider whether these should really be separate or if they should
+% be static methods of the class. If they don't belong in the class,
+% perhaps they should be in a separate file.
+
+%% getParentFigure
 function fig = getParentFigure(fig)
 % if the object is a figure or figure descendent, return the
 % figure. Otherwise return [].

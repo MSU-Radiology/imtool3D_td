@@ -1,9 +1,11 @@
+%% imtool3DROI_poly class
 classdef imtool3DROI_poly < imtool3DROI
-    
+    %% Public Properties
     properties
 
     end
     
+    %% Protected Properties
     properties (SetAccess = protected, GetAccess = protected)
         position        %nx2 matrix that defines the vertices of the polygon [x y] 
         markerPosition  %nx2 matrix that defines the position of the markers [x y]
@@ -11,10 +13,10 @@ classdef imtool3DROI_poly < imtool3DROI
         tbuff           %amount of space (in pixels) to place the text above the ROI
     end
     
+    %% Public Class Methods
     methods
-        %Contructor
+        %% Contructor
         function ROI = imtool3DROI_poly(varargin)
-            
             switch nargin
                 case 0  %use the current figure
                     
@@ -110,19 +112,20 @@ classdef imtool3DROI_poly < imtool3DROI
             
             %update the text
             newPosition(ROI,position)
-            
         end
         
+        %% getPosition
         function position = getPosition(ROI)
             position = ROI.position;
         end
         
+        %% getMarkerPosition
         function position = getMarkerPosition(ROI)
             position = ROI.markerPosition;
         end
-
+        
+        %% newPosition
         function newPosition(ROI,markerPosition)
-            
             isopen = double(~isequal(markerPosition(end,:),markerPosition(1,:)));
             if isopen, ROI.curveindex(1) = 0; end
             
@@ -216,10 +219,9 @@ classdef imtool3DROI_poly < imtool3DROI
                 str = {['Length:     ' num2str(sum(sqrt(sum(diff(stats.position,1,1).^2,2))),'%.2f') 'px']};
             end
             set(ROI.textHandle,'String',str,'Position',[x y]);
-            
-            
         end
         
+        %% getMeasurements
         function stats = getMeasurements(ROI)
             %get the position
             position = ROI.position;
@@ -251,18 +253,22 @@ classdef imtool3DROI_poly < imtool3DROI
             stats.area = sum(mask(:));
             stats.position = position;
             stats.centroid = [x y];
-            
         end
         
+        %% handlePropEvents
         function handlePropEvents(ROI,~,~)
             position = getMarkerPosition(ROI);
             newPosition(ROI,position);
         end
-        
     end
-    
 end
 
+%% Non-Class Helper Functions
+% TODO: Consider whether these should really be separate or if they should
+% be static methods of the class. If they don't belong in the class,
+% perhaps they should be in a separate file.
+
+%% getPolygonCentroid
 function [x,y] = getPolygonCentroid(position)
 if ~isequal(position(end,:),position(1,:))
     position(end+1,:) = position(1,:);
@@ -284,6 +290,7 @@ y = A .* sum((yi + yip1).*diff);
 
 end
 
+%% findTextPosition
 function [x,y] = findTextPosition(position,tbuff)
 %This finds the postion of the text box given the polygon vertices
 V = get(gca,'View');
@@ -297,6 +304,7 @@ y = min(position(:,2))-tbuff;
 
 end
 
+%% findLineSegment
 function ind = findLineSegment(position,cp)
 %This finds the line segment that was clicked by the user
 
@@ -311,13 +319,10 @@ dist = abs (dy.*x0 - dx.*y0 + x2y1 - y2x1) ./ sqrt(dx.^2 + dy.^2);
 
 %get the index of the min distance
 [~, ind] = min(dist);
-
-
-
 end
 
+%% ButtonDownFunction
 function ButtonDownFunction(~,evnt,ROI,n)
-
 %get the parent figure handle
 fig = ROI.figureHandle;
 
@@ -416,6 +421,7 @@ set(fig,'WindowButtonMotionFcn',fun,'WindowButtonUpFcn',fun2);
 
 end
 
+%% ButtonMotionFunction
 function ButtonMotionFunction(~,~,ROI,n,op,position_old,ind)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 isopen = ~isequal(position_old(end,:),position_old(1,:));
@@ -440,6 +446,7 @@ newPosition(ROI,position);
 
 end
 
+%% ButtonUpFunction
 function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 
@@ -447,6 +454,7 @@ set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
 
 end
 
+%% contextMenuCallback
 function contextMenuCallback(source,~,ROI, tool)
 switch get(source,'Label')
     case 'Delete'

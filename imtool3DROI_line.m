@@ -1,9 +1,11 @@
+%% imtool3DROI_line
 classdef imtool3DROI_line < imtool3DROI
-    
+    %% Public Properties
     properties
 
     end
     
+    %% Protected Properties
     properties (SetAccess = protected, GetAccess = protected)
         position     %nx2 matrix that defines the vertices of the polygon [x y] 
         tbuff = 10;  %amount of space (in pixels) to place the text above the line
@@ -11,9 +13,9 @@ classdef imtool3DROI_line < imtool3DROI
         pheight      %height of the line profile drawn above the ROI line. Default sets it to a percentage of the size of the image
     end
     
+    %% Public Class Methods
     methods
-        
-        %Contstructor
+        %% Constructor
         function ROI = imtool3DROI_line(varargin)
             
             switch nargin
@@ -123,10 +125,12 @@ classdef imtool3DROI_line < imtool3DROI
             newPosition(ROI,position)
         end
         
+        %% getPosition
         function position = getPosition(ROI)
             position = ROI.position;
         end
         
+        %% profileVisible
         function profileVisible(ROI,visible)
             if visible
                 set(ROI.graphicsHandles(3),'Visible','on')
@@ -135,8 +139,8 @@ classdef imtool3DROI_line < imtool3DROI
             end
         end
         
+        %% newPosition
         function newPosition(ROI,position)
-            
             %set the position property of the ROI
             ROI.position = position;
             
@@ -161,6 +165,7 @@ classdef imtool3DROI_line < imtool3DROI
             notify(ROI,'newROIPosition');
         end
         
+        %% getMeasurement
         function [stats, x ,y] = getMeasurements(ROI)
             %get the position
             position = ROI.position; %#ok<*PROP>
@@ -201,17 +206,22 @@ classdef imtool3DROI_line < imtool3DROI
             %adjust the x and y values
             x = x + d.*perp(1);
             y = y + d.*perp(2);
-            
         end
         
+        %% handlePropEvents
         function handlePropEvents(ROI,~,~)
             position = getPosition(ROI); %#ok<*PROPLC>
             newPosition(ROI,position);
         end
     end
-    
 end
 
+%% Non-Class Helper Functions
+% TODO: Consider whether these should really be separate or if they should
+% be static methods of the class. If they don't belong in the class,
+% perhaps they should be in a separate file.
+
+%% ButtonDownFunction
 function ButtonDownFunction(~,~,ROI,n)
 
 %get the parent figure handle
@@ -242,6 +252,7 @@ if strcmp(click,'normal')
 end
 end
 
+%% ButtonMotionFunction
 function ButtonMotionFunction(~,~,ROI,n,op,position_old,ind)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 
@@ -262,6 +273,7 @@ newPosition(ROI,position);
 
 end
 
+%% ButtonUpFunction
 function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 
@@ -269,14 +281,13 @@ set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
 
 end
 
+%% findTextPosition
 function [x,y] = findTextPosition(position,tbuff)
-%This finds the postion of the text box given the polygon vertices
-
-x = min(position(:,1)); y = max(position(:,2))+tbuff;
-
-
+    %This finds the postion of the text box given the polygon vertices
+    x = min(position(:,1)); y = max(position(:,2))+tbuff;
 end
 
+%% contextMenuCallback
 function contextMenuCallback(source,~,ROI,tool,islct)
 switch get(source,'Label')
     case 'Delete'

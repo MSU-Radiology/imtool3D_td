@@ -1,3 +1,4 @@
+%% imtool3D_nii
 function tool = imtool3D_nii(filename,viewplane,maskfname, parent, range)
 % NIFTI Viewer
 %
@@ -156,8 +157,10 @@ if length(tool)>1
 end
 
 if exist('tool3P','var'), tool = tool3P; end
+end
 
-
+%% openvar2
 function openvar2(hdr)
 assignin('base','hdr',hdr);
 evalin('base', ['openvar hdr']);
+end
