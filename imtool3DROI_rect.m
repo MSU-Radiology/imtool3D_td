@@ -227,8 +227,8 @@ classdef imtool3DROI_rect < imtool3DROI
             
         end
         
-        function handlePropEvents(ROI,src,evnt)
-            position = getPosition(ROI);
+        function handlePropEvents(ROI,~,~)
+            position = getPosition(ROI); %#ok<*PROPLC>
             newPosition(ROI,position);
         end
         
@@ -248,7 +248,7 @@ classdef imtool3DROI_rect < imtool3DROI
         end
         
         function aspectRatio = get.aspectRatio(ROI)
-            position = ROI.position;
+            position = ROI.position; %#ok<*PROP>
             aspectRatio = position(3)/position(4);
         end
         
@@ -288,7 +288,7 @@ classdef imtool3DROI_rect < imtool3DROI
         
 end
 
-function ButtonDownFunction(hObject,evnt,ROI,n)
+function ButtonDownFunction(~,~,ROI,n)
 
 %get the parent figure handle
 fig = ROI.figureHandle;
@@ -308,7 +308,7 @@ if strcmp(click,'normal')
 end
 end
 
-function ButtonMotionFunction(src,evnt,ROI,n)
+function ButtonMotionFunction(~,~,ROI,n)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 
 position = getPosition(ROI);
@@ -491,13 +491,13 @@ newPosition(ROI,position);
 
 end
 
-function ButtonUpFunction(src,evnt,ROI,WBMF_old,WBUF_old)
+function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
 notify(ROI,'newROIPositionUp');
 end
 
-function contextMenuCallback(source,callbackdata,ROI, tool)
+function contextMenuCallback(source,~,ROI, tool)
 
 switch get(source,'Label')
     case 'Delete'
@@ -505,9 +505,24 @@ switch get(source,'Label')
     case 'Export stats'
         stats = getMeasurements(ROI);
         name = inputdlg('Enter variable name');
-        if isempty(name); return; end
+        if isempty(name)
+            return
+        end
         name=name{1};
-        assignin('base', name, stats)
+        try
+            assignin('base', name, stats)
+        catch ex
+            % handle the case of invalid user-supplied variable name
+            idSegLast = regexp(ex.identifier, '(?<=:)\w+$', 'match');
+            
+            if(strcmp(idSegLast, 'assigninInvalidVariable'))
+                warndlg({'Invalid variable name.'; ...
+                    'Stats were not exported to the workspace.'}, ...
+                    'Stats Not Saved', 'replace');
+            else
+                rethrow(ex);
+            end
+        end
     case 'Fix Aspect Ratio'
         switch get(source,'Checked')
             case 'off'

@@ -23,7 +23,7 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
                     hi = imhandles(ha);
                     if length(hi)>1
                         for i=1:length(hi)
-                            if ndims(get(hi(i),'CData'))<3
+                            if ndims(get(hi(i),'CData'))<3 %#ok<ISMAT>
                                 imageHandle = hi(i);
                             end
                         end
@@ -130,9 +130,6 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
         function [x, y] = getPoly(ROI)
             %get the position
             position = ROI.position;
-            
-            %find the top left corner of the box
-            pos = [position(1)-position(3)/2 position(2)-position(3)/2 position(3) position(4)];
             
             %make the polygon
             [x,y] = getEllipsePoints(position,ROI.nPoints,'nPoints');
@@ -295,7 +292,7 @@ x = a*cos(t); x = x+position(1);
 y = b*sin(t); y = y+position(2);
 end
 
-function ButtonDownFunction(hObject,evnt,ROI,n)
+function ButtonDownFunction(~,~,ROI,n)
 
 %get the parent figure handle
 fig = ROI.figureHandle;
@@ -315,7 +312,7 @@ if strcmp(click,'normal')
 end
 end
 
-function ButtonMotionFunction(src,evnt,ROI,n)
+function ButtonMotionFunction(~,~,ROI,n)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 
 position = getPosition(ROI);
@@ -510,7 +507,7 @@ newPosition(ROI,position);
 
 end
 
-function ButtonUpFunction(src,evnt,ROI,WBMF_old,WBUF_old)
+function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 
 set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);

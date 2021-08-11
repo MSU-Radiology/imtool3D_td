@@ -28,7 +28,7 @@ classdef imtool3DROI_poly < imtool3DROI
                     hi = imhandles(ha);
                     if length(hi)>1
                         for i=1:length(hi)
-                            if ndims(get(hi(i),'CData'))<3
+                            if ndims(get(hi(i),'CData'))<3 %#ok<ISMAT>
                                 imageHandle = hi(i);
                             end
                         end
@@ -254,7 +254,7 @@ classdef imtool3DROI_poly < imtool3DROI
             
         end
         
-        function handlePropEvents(ROI,src,evnt)
+        function handlePropEvents(ROI,~,~)
             position = getMarkerPosition(ROI);
             newPosition(ROI,position);
         end
@@ -316,7 +316,7 @@ dist = abs (dy.*x0 - dx.*y0 + x2y1 - y2x1) ./ sqrt(dx.^2 + dy.^2);
 
 end
 
-function ButtonDownFunction(hObject,evnt,ROI,n)
+function ButtonDownFunction(~,evnt,ROI,n)
 
 %get the parent figure handle
 fig = ROI.figureHandle;
@@ -416,7 +416,7 @@ set(fig,'WindowButtonMotionFcn',fun,'WindowButtonUpFcn',fun2);
 
 end
 
-function ButtonMotionFunction(src,evnt,ROI,n,op,position_old,ind)
+function ButtonMotionFunction(~,~,ROI,n,op,position_old,ind)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 isopen = ~isequal(position_old(end,:),position_old(1,:));
 switch n
@@ -440,23 +440,38 @@ newPosition(ROI,position);
 
 end
 
-function ButtonUpFunction(src,evnt,ROI,WBMF_old,WBUF_old)
+function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 
 set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
 
 end
 
-function contextMenuCallback(source,callbackdata,ROI, tool)
+function contextMenuCallback(source,~,ROI, tool)
 switch get(source,'Label')
     case 'Delete'
         delete(ROI);
     case 'Export stats'
         stats = getMeasurements(ROI);
         name = inputdlg('Enter variable name');
-        if isempty(name) || isempty(name{1}), return; end
+        if isempty(name) || isempty(name{1})
+            return
+        end
         name=name{1};
-        assignin('base', name, stats)
+        try
+            assignin('base', name, stats)
+        catch ex
+            % handle the case of invalid user-supplied variable name
+            idSegLast = regexp(ex.identifier, '(?<=:)\w+$', 'match');
+            
+            if(strcmp(idSegLast, 'assigninInvalidVariable'))
+                warndlg({'Invalid variable name.'; ...
+                    'Stats were not exported to the workspace.'}, ...
+                    'Stats Not Saved', 'replace');
+            else
+                rethrow(ex);
+            end
+        end
     case 'Hide Text'
         switch get(source,'Checked')
             case 'off'

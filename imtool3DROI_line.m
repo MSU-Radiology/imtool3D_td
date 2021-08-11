@@ -29,7 +29,7 @@ classdef imtool3DROI_line < imtool3DROI
                     hi = imhandles(ha);
                     if length(hi)>1
                         for i=1:length(hi)
-                            if ndims(get(hi(i),'CData'))<3
+                            if ndims(get(hi(i),'CData'))<3 %#ok<ISMAT>
                                 imageHandle = hi(i);
                             end
                         end
@@ -163,7 +163,7 @@ classdef imtool3DROI_line < imtool3DROI
         
         function [stats, x ,y] = getMeasurements(ROI)
             %get the position
-            position = ROI.position;
+            position = ROI.position; %#ok<*PROP>
             
             %get the image data
             im = get(ROI.imageHandle,'CData');
@@ -204,15 +204,15 @@ classdef imtool3DROI_line < imtool3DROI
             
         end
         
-        function handlePropEvents(ROI,src,evnt)
-            position = getPosition(ROI);
+        function handlePropEvents(ROI,~,~)
+            position = getPosition(ROI); %#ok<*PROPLC>
             newPosition(ROI,position);
         end
     end
     
 end
 
-function ButtonDownFunction(hObject,evnt,ROI,n)
+function ButtonDownFunction(~,~,ROI,n)
 
 %get the parent figure handle
 fig = ROI.figureHandle;
@@ -242,7 +242,7 @@ if strcmp(click,'normal')
 end
 end
 
-function ButtonMotionFunction(src,evnt,ROI,n,op,position_old,ind)
+function ButtonMotionFunction(~,~,ROI,n,op,position_old,ind)
 cp = get(ROI.axesHandle,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 
 switch n
@@ -262,7 +262,7 @@ newPosition(ROI,position);
 
 end
 
-function ButtonUpFunction(src,evnt,ROI,WBMF_old,WBUF_old)
+function ButtonUpFunction(~,~,ROI,WBMF_old,WBUF_old)
 fig = ROI.figureHandle;
 
 set(fig,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
@@ -277,16 +277,31 @@ x = min(position(:,1)); y = max(position(:,2))+tbuff;
 
 end
 
-function contextMenuCallback(source,callbackdata,ROI,tool,islct)
+function contextMenuCallback(source,~,ROI,tool,islct)
 switch get(source,'Label')
     case 'Delete'
         delete(ROI);
     case 'Export stats'
         [stats, ~,~] = getMeasurements(ROI);
         name = inputdlg('Enter variable name');
-        if isempty(name), return; end
+        if isempty(name)
+            return
+        end
         name=name{1};
-        assignin('base', name, stats)
+        try
+            assignin('base', name, stats)
+        catch ex
+            % handle the case of invalid user-supplied variable name
+            idSegLast = regexp(ex.identifier, '(?<=:)\w+$', 'match');
+            
+            if(strcmp(idSegLast, 'assigninInvalidVariable'))
+                warndlg({'Invalid variable name.'; ...
+                    'Stats were not exported to the workspace.'}, ...
+                    'Stats Not Saved', 'replace');
+            else
+                rethrow(ex);
+            end
+        end
     case 'Plot profile'
         [stats, ~,~] = getMeasurements(ROI);
         %get distance from the first point
