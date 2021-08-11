@@ -342,9 +342,10 @@ classdef imtool3D < handle
             [I, position, h, range, tools, mask, enableHist] = parseinputs(varargin{:});
             
             % display figure
-            try, Orient = uigetpref('imtool3D','rot90','Set orientation','How to display the first dimension of the matrix?',{'Vertically (Photo)','Horizontally (Medical)'},'CheckboxState',1,'HelpString','Help','HelpFcn','helpdlg({''If this option is wrongly set, image will be rotated by 90 degree.'', ''Horizontal orientation is usually used in Medical (first dimension is Left-Right)'', '''', ''This preference can be reset in the Settings menu (<about> button).'', '''', ''Orientation can also be changed while viewing an image using the command: tool.setOrient(''''vertical'''')''})'); 
+            try
+                Orient = uigetpref('imtool3D','rot90','Set orientation','How to display the first dimension of the matrix?',{'Vertically (Photo)','Horizontally (Medical)'},'CheckboxState',1,'HelpString','Help','HelpFcn','helpdlg({''If this option is wrongly set, image will be rotated by 90 degree.'', ''Horizontal orientation is usually used in Medical (first dimension is Left-Right)'', '''', ''This preference can be reset in the Settings menu (<about> button).'', '''', ''Orientation can also be changed while viewing an image using the command: tool.setOrient(''''vertical'''')''})'); 
             catch
-            Orient = 'vertical';    
+                Orient = 'vertical';
             end
             if isempty(h)
                 
@@ -1119,8 +1120,8 @@ classdef imtool3D < handle
                 set(tool.handles.HistImage,'XData',[1 256]);
                 axis(tool.handles.HistAxes,'fill')
             end
-            %Update the window and level
-            setWL(tool,diff(range),mean(range))
+            %Update the window and level (minimum window width is 1)
+            setWL(tool,max(diff(range),1),mean(range))
             
             %Update the image
             %set(tool.handles.I,'CData',im)
@@ -1748,6 +1749,8 @@ classdef imtool3D < handle
         function removeBrushObject(tool)
             try
                 delete(tool.handles.PaintBrushObject)
+            catch ex
+                warning(ex);
             end
             tool.handles.PaintBrushObject=[];
         end
@@ -1759,6 +1762,8 @@ classdef imtool3D < handle
                 set(tool.handles.fig,'WindowButtonMotionFcn',[]);
                 H = tool.optdlg.getHandles();
                 delete(H.fig)
+            catch ex
+                warning(ex);
             end
         end
         
@@ -2507,6 +2512,8 @@ classdef imtool3D < handle
                 set(tool.handles.Histrange(1),'XData',[L-W/2 L-W/2 L-W/2])
                 set(tool.handles.Histrange(2),'XData',[L+W/2 L+W/2 L+W/2])
                 set(tool.handles.Histrange(3),'XData',[L L L])
+            catch ex
+                warning(ex);
             end
         end
         
@@ -2966,12 +2973,12 @@ end
 function WindowLevel_callback(hobject,evnt,tool)
 range=get(tool.handles.Axes(tool.Nvol),'Clim');
 
-L=str2num(get(tool.handles.Tools.L,'String'));
+L=str2double(get(tool.handles.Tools.L,'String'));
 if isempty(L)
     L=range(1);
     set(tool.handles.Tools.L,'String',num2str(L))
 end
-U=str2num(get(tool.handles.Tools.U,'String'));
+U=str2double(get(tool.handles.Tools.U,'String'));
 if isempty(U)
     U=range(2);
     set(tool.handles.Tools.U,'String',num2str(U))
@@ -3451,7 +3458,7 @@ end
 function fig = getParentFigure(fig)
 % if the object is a figure or figure descendent, return the
 % figure. Otherwise return [].
-while ~isempty(fig) & ~strcmp('figure', get(fig,'type'))
+while ~isempty(fig) && ~strcmp('figure', get(fig,'type'))
     fig = get(fig,'parent');
 end
 end
@@ -3473,7 +3480,7 @@ overAxes = x>=xlims(1) & x<=xlims(2) & y>=ylims(1) & y<=ylims(2);
 
 end
 
-function displayHelp(hObject,evnt,tool)
+function displayHelp(hObject,~,tool)
 %%
 h = get(hObject,'Value');
 if h == 1
