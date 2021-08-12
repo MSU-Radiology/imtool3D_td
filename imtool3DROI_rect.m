@@ -33,7 +33,7 @@ classdef imtool3DROI_rect < imtool3DROI
                     hi = imhandles(ha);
                     if length(hi)>1
                         for i=1:length(hi)
-                            if ndims(get(hi(i),'CData'))<3
+                            if ndims(get(hi(i),'CData'))<3 %#ok<*ISMAT>
                                 imageHandle = hi(i);
                             end
                         end
@@ -56,7 +56,6 @@ classdef imtool3DROI_rect < imtool3DROI
                     delete(h);
                 case 2 %user inputs both the parent handle and a position
                     imageHandle = varargin{1};
-                    parent = get(imageHandle,'Parent');
                     position = varargin{2};
                 case 3
                     imageHandle = varargin{1};
@@ -268,8 +267,6 @@ classdef imtool3DROI_rect < imtool3DROI
         function BB = getBoundingBox(ROI)
             %BB = [rowMin rowMax; colMin ColMax];
             
-            BB=zeros(2);
-            
             rowMin = floor(ROI.position(2) - ROI.position(4)/2);
             if rowMin < 1 
                 rowMin = 1;
@@ -289,6 +286,8 @@ classdef imtool3DROI_rect < imtool3DROI
                 if colMax > lims(2)
                     colMax = lims(2);
                 end
+            catch ex
+                warning(ex);
             end
             BB = [rowMin rowMax; colMin colMax];
         end

@@ -76,7 +76,10 @@ classdef imtool3DROI < handle
         % source file
         function set.lineColor(ROI,lineColor)
             ROI.lineColor = lineColor;
-            graphicsHandles = ROI.graphicsHandles;
+            
+            % TODO: Fix the dependency of lineColor on the graphicsHandles
+            % property
+            graphicsHandles = ROI.graphicsHandles; %#ok<*PROPLC>
             for i=1:length(graphicsHandles)
                 switch class(graphicsHandles(i))
                     case 'matlab.graphics.chart.primitive.Line'
@@ -96,6 +99,8 @@ classdef imtool3DROI < handle
         % source file
         function set.markerColor(ROI,markerColor)
             ROI.markerColor = markerColor;
+            
+            % TODO: Fix the dependency on the graphicsHandles property
             graphicsHandles = ROI.graphicsHandles;
             for i=1:length(graphicsHandles)
                 switch class(graphicsHandles(i))
@@ -120,13 +125,16 @@ classdef imtool3DROI < handle
                 str = 'off';
             end
             %turn on or off the visibility of the ROI graphics
+            % TODO: Fix the dependency on the graphicsHandles property
             for i=1:length(ROI.graphicsHandles)
                 set(ROI.graphicsHandles(i),'Visible',str);
             end
             
             %Turn on or off the visibility of the text box
             if visible
+                % TODO: Fix the dependency on the textVisible property
                 if ROI.textVisible
+                    % TODO: Fix the dependency on the textHandle property
                     set(ROI.textHandle,'Visible','on');
                 else
                     set(ROI.textHandle,'Visible','off');
@@ -143,7 +151,9 @@ classdef imtool3DROI < handle
         function set.textVisible(ROI,textVisible)
             ROI.textVisible=textVisible;
             if textVisible
+                % TODO: Fix the dependency on the textVisible property
                 if ROI.visible
+                    % TODO: Fix the dependency on the textHandle property
                     set(ROI.textHandle,'Visible','on');
                 else
                     set(ROI.textHandle,'Visible','off');
@@ -151,6 +161,7 @@ classdef imtool3DROI < handle
             else
                 set(ROI.textHandle,'Visible','off');
                 %make sure the context menu is in sync with this
+                % TODO: Fix the dependency on the menuHandles property
                 for i=1:length(ROI.menuHandles)
                     switch get(ROI.menuHandles(i),'Label')
                         case 'Hide Text'
@@ -183,7 +194,7 @@ end
 function fig = getParentFigure(fig)
 % if the object is a figure or figure descendent, return the
 % figure. Otherwise return [].
-while ~isempty(fig) & ~strcmp('figure', get(fig,'type'))
+while ~isempty(fig) && ~strcmp('figure', get(fig,'type'))
   fig = get(fig,'parent');
 end
 end

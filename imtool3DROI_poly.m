@@ -224,7 +224,7 @@ classdef imtool3DROI_poly < imtool3DROI
         %% getMeasurements
         function stats = getMeasurements(ROI)
             %get the position
-            position = ROI.position;
+            position = ROI.position; %#ok<*PROP>
             x=position(:,1);
             y=position(:,2);
             
@@ -239,7 +239,6 @@ classdef imtool3DROI_poly < imtool3DROI
             y = y*m/ROI.imageHandle.YData(2);
             
             mask = poly2mask(x,y,m,n);
-            cent = regionprops(double(mask),'Centroid');
             [x,y] = getPolygonCentroid(position);
             
             
@@ -257,7 +256,7 @@ classdef imtool3DROI_poly < imtool3DROI
         
         %% handlePropEvents
         function handlePropEvents(ROI,~,~)
-            position = getMarkerPosition(ROI);
+            position = getMarkerPosition(ROI); %#ok<*PROPLC>
             newPosition(ROI,position);
         end
     end

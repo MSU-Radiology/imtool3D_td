@@ -162,5 +162,5 @@ end
 %% openvar2
 function openvar2(hdr)
 assignin('base','hdr',hdr);
-evalin('base', ['openvar hdr']);
+evalin('base', 'openvar hdr');
 end

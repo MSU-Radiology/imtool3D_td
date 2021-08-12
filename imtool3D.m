@@ -344,7 +344,7 @@ classdef imtool3D < handle
         function tool = imtool3D(varargin)  %Constructor
             
             % Parse Inputs
-            [I, position, h, range, tools, mask, enableHist] = parseinputs(varargin{:});
+            [I, position, h, ~, tools, ~, enableHist] = parseinputs(varargin{:});
             
             % display figure
             try
@@ -510,17 +510,22 @@ classdef imtool3D < handle
             w=wbutt;
             buff=(wp-w)/2;
             
-            % icon directory
-            if ~isdeployed
-                MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
-            else
-                if ~ispc
-                    MATLABdir = '/opt/mcr/v95/mcr/toolbox/matlab/icons';
-                else
-                    % TODO:
-                    MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
-                end
-            end
+            % The commented-out variable assignments are unused. If this
+            % is work-in-progress code and MATLABdir will ultimately be
+            % used, then keep it and uncomment when adding the code block
+            % that will use the variable. Otherwise, this should be purged
+            % per the YAGNI principle.
+%             % icon directory
+%             if ~isdeployed
+%                 MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
+%             else
+%                 if ~ispc
+%                     MATLABdir = '/opt/mcr/v95/mcr/toolbox/matlab/icons';
+%                 else
+%                     % TODO:
+%                     MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
+%                 end
+%             end
 
             %Create the histogram plot
             %set(tool.handles.Panels.Image,'Visible','off')
@@ -872,7 +877,7 @@ classdef imtool3D < handle
             % 4D mask --> indice along 4th dim
             if ndims(mask)>3, [~,masktmp] = max(uint8(mask(:,:,:,:)),[],4); mask = uint8(masktmp).*uint8(any(mask(:,:,:,:),4)); end
             if ~isempty(mask) && (size(mask,1)~=size(tool.I{1},1) || size(mask,2)~=size(tool.I{1},2) || size(mask,3)~=size(tool.I{1},3))
-                warning(sprintf('Mask (%dx%dx%d) is inconsistent with Image (%dx%dx%d)',size(mask,1),size(mask,2),size(mask,3),size(tool.I{1},1),size(tool.I{1},2),size(tool.I{1},3)))
+                warning('Mask (%dx%dx%d) is inconsistent with Image (%dx%dx%d)',size(mask,1),size(mask,2),size(mask,3),size(tool.I{1},1),size(tool.I{1},2),size(tool.I{1},3))
                 mask = [];
             end
             if isempty(mask) && (isempty(tool.mask) || size(tool.mask,1)~=size(tool.I{1},1) || size(tool.mask,2)~=size(tool.I{1},2) || size(tool.mask,3)~=size(tool.I{1},3))
@@ -1042,7 +1047,7 @@ classdef imtool3D < handle
             % tool.setImage(I, [], [], range, tools, mask) use a mask
             % tool.setImage(I, [], [], range, tools, mask,  enableHist) use
             %                                    Histogram function? Slower...
-            [I, position, h, range, tools, mask, enablehist] = parseinputs(varargin{:});
+            [I, ~, ~, range, ~, mask, ~] = parseinputs(varargin{:}); %#ok<*PROPLC>
             
             if isempty(I)
                 try
@@ -1176,7 +1181,11 @@ classdef imtool3D < handle
             tool.Ntime = min(tool.Ntime,size(I{tool.Nvol},4));
             
             %Update the gridlines
-            try, setupGrid(tool); end
+            try
+                setupGrid(tool);
+            catch ex
+                warning(ex);
+            end
             
             % Create missing image objects
             for it = (length(tool.handles.I)+1):length(I)
@@ -1424,7 +1433,11 @@ classdef imtool3D < handle
                     set(tool.handles.I,'YData',[1 max(2,size(tool.I{tool.getNvol},1))]);
             end
             setupSlider(tool)
-            try, setupGrid(tool); end
+            try
+                setupGrid(tool);
+            catch ex
+                warning(ex);
+            end
 
             
             switch dim
@@ -1449,6 +1462,7 @@ classdef imtool3D < handle
         % source file
         function set.label(tool,label)
             if ischar(label) || isstring(label)
+                % TODO: Fix the dependency on the Nvol property
                 tool.label{tool.Nvol} = char(label);
             elseif iscellstr(label)
                 tool.label = label;
@@ -1510,7 +1524,7 @@ classdef imtool3D < handle
         
         %% getWindowLevel
         function [W,L] = getWindowLevel(tool)
-            range=get(tool.handles.Axes(tool.Nvol),'Clim');
+            range=get(tool.handles.Axes(tool.Nvol),'Clim'); %#ok<*PROP>
             W=diff(range);
             L=mean(range);
         end
@@ -1584,7 +1598,10 @@ classdef imtool3D < handle
         %% getCurrentImageSlice
         function im = getCurrentImageSlice(tool)
             slice = getCurrentSlice(tool);
-            ColorChannel = get(tool.handles.SliderColor,'String');
+            % The ColorChannel variable assignment is unused. If this isn't
+            % work-in-progress code that will be used, recommend removal
+            % because YAGNI.
+%             ColorChannel = get(tool.handles.SliderColor,'String');
             
 
             if ~tool.isRGB
@@ -1958,6 +1975,7 @@ classdef imtool3D < handle
             if tool.RGBalignhisto
                 setWL(tool,256,128)
             else
+                % TODO: Fix the dependency on the range and Nvol properties
                 CL = tool.range{tool.Nvol};
                 setWL(tool,diff(CL),mean(CL))
             end
@@ -2027,6 +2045,7 @@ classdef imtool3D < handle
         % source file
         function set.Visible(tool,Visible)
             if Visible
+                % TODO: Fix the dependency on the handles property
                 set(tool.handles.Panels.Large,'Visible','on');
             else
                 set(tool.handles.Panels.Large,'Visible','off');
@@ -2038,7 +2057,7 @@ classdef imtool3D < handle
         % property getters/setters together in a contiguous block in the 
         % source file
         function set.grid(tool,Visible)
-            % set.grid(tool,Visible)
+            % TODO: Fix the dependency on the handles property
             set(tool.handles.Tools.Grid,'Value',logical(Visible))
             if logical(Visible)
                 if ~ishandle(tool.handles.grid), setupGrid(tool); end
@@ -2054,9 +2073,9 @@ classdef imtool3D < handle
         % property getters/setters together in a contiguous block in the 
         % source file
         function set.montage(tool,montagemode)
-            % set.montage(tool,montagemode)
-            % set.montage(tool,True)
             tool.montage = logical(montagemode);
+            % TODO: Fix the dependency on the handles, I, Nvol, and 
+            % viewplane properties
             set(tool.handles.Tools.montage,'Value',tool.montage)
             showSlice(tool,12+(1-get(tool.handles.Tools.montage,'Value'))*(round(size(tool.I{tool.Nvol},tool.viewplane)/2)-12)); % show 12 slices by default
         end
@@ -2127,7 +2146,7 @@ classdef imtool3D < handle
                         case '4'
                             togglebutton(tool.handles.Tools.maskSelected(4))
                         otherwise
-                            islct = str2num(evnt.Character);
+                            islct = str2double(evnt.Character);
                             if ~isempty(islct)
                                 maskCustomValue(tool,islct);
                             end
@@ -2172,7 +2191,12 @@ classdef imtool3D < handle
             ext = 1;
             
             if strfind(imformats{ext,2},'slice') % Current slice
-                try, I = getframe(h.Axes(tool.Nvol)); I = I.cdata; catch I=get(h.I,'CData'); end
+                try
+                    I = getframe(h.Axes(tool.Nvol)); I = I.cdata;
+                catch ex
+                    warning(ex);
+                    I=get(h.I,'CData');
+                end
                 if iscell(I), I = I{tool.Nvol}; end
                 viewtype = get(tool.handles.Axes(tool.Nvol),'View');
                 if viewtype(1)==-90, I=rot90(I);  end
@@ -2248,7 +2272,10 @@ classdef imtool3D < handle
                             err=1;
                             while(err)
                                 answer = inputdlg2({'save as:','browse reference scan'},'save mask',[1 50],{fullfile(PathName,FileName), ''});
-                                if isempty(answer), err=0; break; end
+                                if isempty(answer)
+                                    err=0;
+                                    break
+                                end
                                 if ~isempty(answer{1})
                                     answer{1} = strrep(answer{1},'.gz','.nii.gz');
                                     answer{1} = strrep(answer{1},'.nii.nii','.nii');
@@ -2326,6 +2353,10 @@ classdef imtool3D < handle
                 case {'.tif','.tiff'}
                     info = imfinfo(fullfile(PathName,FileName));
                     num_images = numel(info);
+                    
+                    % TODO: Determine the matrix size for the images being
+                    % read and preallocate Mask variable so its size isn't
+                    % being changed at every iteration
                     for k = 1:num_images
                         Mask(:,:,k) = imread(fullfile(PathName,FileName), k);
                     end
@@ -2460,6 +2491,8 @@ classdef imtool3D < handle
             % apply gamma correction
             if tool.gamma ~= 1
                 range = tool.range{tool.Nvol};
+                
+                % TODO: preallocate lut variable
                 switch class(In)
                     case 'uint8' % gamma between 0 and 255
                         lut = uint8(linspace(0,1,256).^tool.gamma*255);
@@ -2650,7 +2683,7 @@ classdef imtool3D < handle
         end
         
         %% maskEvents
-        function maskEvents(tool,src,evnt)
+        function maskEvents(tool,~,evnt)
             % Enable/Disable buttons
             [x,y,z] = find3d(tool.mask==tool.maskSelected);
             switch tool.viewplane
@@ -2764,7 +2797,7 @@ classdef imtool3D < handle
         end
         
         %% SliceEvents
-        function SliceEvents(tool,src,evnt)
+        function SliceEvents(tool,~,~)
             mask = tool.getCurrentMaskSlice(1);
             
             if any(mask(:))
@@ -2782,7 +2815,7 @@ end
 % perhaps they should be in a separate file.
 
 %% StatsCallback
-function StatsCallback(hObject,evnt,tool)
+function StatsCallback(hObject,~,tool)
 % unselect button to prevent activation with spacebar
 set(hObject, 'Enable', 'off');
 drawnow;
@@ -2813,7 +2846,9 @@ pos = get(f1,'Position');
 name = 'Statistics';
 if length(tool.I)>1, name = [name ' in each volume']; end
 if tool.isRGB && tool.RGBdim == 3, name = [name ' in the channels RGB']; else
-if any(Mask(:)) name = [name ' in the different ROI']; end
+if(any(Mask(:)))
+    name = [name ' in the different ROI'];
+end
 end
 set(f1,'Name',name)
 pos(1) = pos(1)+pos(3);
@@ -2821,7 +2856,7 @@ set(f2,'Position',pos,'Name',['Histrogram of ' label{tool.Nvol}])
 end
 
 %% PainBrushCallback
-function PaintBrushCallback(hObject,evnt,tool,style)
+function PaintBrushCallback(hObject,~,tool,style)
 %Remove any old brush
 removeBrushObject(tool);
 
@@ -2838,12 +2873,14 @@ end
 end
 
 %% mask2polyImageCallback
-function mask2polyImageCallback(hObject,evnt,tool)
+function mask2polyImageCallback(~,~,tool)
 h = getHandles(tool);
 mask = tool.getCurrentMaskSlice(0);
 mask = imfill(mask,'holes');
 if any(mask(:))
     [labels,num] = bwlabel(mask);
+    
+    % TODO: Preallocate P variable
     for ilab=1:num
         labelilab = labels==ilab;
         if sum(labelilab(:))>15
@@ -2859,7 +2896,7 @@ end
 end
 
 %% smooth3Callback
-function smooth3Callback(hObject,evnt,tool)
+function smooth3Callback(hObject,~,tool)
 % unselect button to prevent activation with spacebar
 set(hObject, 'Enable', 'off');
 drawnow;
@@ -2871,7 +2908,7 @@ tool.setMask(mask);
 end
 
 %% maskinterpImageCallback
-function maskinterpImageCallback(hObject,evnt,tool)
+function maskinterpImageCallback(~,~,tool)
 mask = getMask(tool);
 [x,y,z] = find3d(mask);
 mask2=false(size(mask));
@@ -2891,7 +2928,7 @@ tool.setMask(mask2);
 end
 
 %% ActiveContourCallback
-function ActiveContourCallback(hObject,evnt,tool)
+function ActiveContourCallback(hObject,~,tool)
 % unselect button to prevent activation with spacebar
 set(hObject, 'Enable', 'off');
 drawnow;
@@ -2988,21 +3025,21 @@ end
 end
 
 %% measureImageCallback
-function measureImageCallback(hObject,evnt,tool,type)
+function measureImageCallback(~,~,tool,type)
 removeBrushObject(tool)
 switch type
     case 'ellipse'
         h = getHandles(tool);
-        ROI = imtool3DROI_ellipse(h.I(tool.Nvol),[],tool);
+        [~] = imtool3DROI_ellipse(h.I(tool.Nvol),[],tool);
     case 'rectangle'
         h = getHandles(tool);
-        ROI = imtool3DROI_rect(h.I(tool.Nvol),[],tool);
+        [~] = imtool3DROI_rect(h.I(tool.Nvol),[],tool);
     case 'polygon'
         h = getHandles(tool);
-        ROI = imtool3DROI_poly(h.I(tool.Nvol),[],tool);
+        [~] = imtool3DROI_poly(h.I(tool.Nvol),[],tool);
     case 'profile'
         h = getHandles(tool);
-        ROI = imtool3DROI_line(h.I(tool.Nvol),[],tool);
+        [~] = imtool3DROI_line(h.I(tool.Nvol),[],tool);
     otherwise
 end
 
@@ -3010,7 +3047,7 @@ end
 end
 
 %% imageButtonDownFunction
-function varargout = imageButtonDownFunction(hObject,eventdata,tool)
+function varargout = imageButtonDownFunction(~,~,tool)
 switch nargout
     case 0
         bp = get(0,'PointerLocation');
@@ -3074,13 +3111,13 @@ end
 end
 
 %% resetViewCallback
-function resetViewCallback(hObject,evnt,tool)
+function resetViewCallback(~,~,tool)
 set(tool.handles.Axes,'Xlim',get(tool.handles.I(tool.Nvol),'XData'))
 set(tool.handles.Axes,'Ylim',get(tool.handles.I(tool.Nvol),'YData'))
 end
 
 %% toggleGrid
-function toggleGrid(hObject,eventdata,tool)
+function toggleGrid(hObject,~,tool)
 % unselect button to prevent activation with spacebar
 try
     warning off
@@ -3094,7 +3131,7 @@ tool.grid = get(hObject,'Value');
 end
 
 %% toggleMontage
-function toggleMontage(hObject,eventdata,tool)
+function toggleMontage(hObject,~,tool)
 % unselect button to prevent activation with spacebar
 try
     warning off
@@ -3102,13 +3139,15 @@ try
     drawnow;
     set(hObject, 'Enable', 'on');
     warning on
+catch ex
+    warning(ex);
 end
 
 tool.montage = get(hObject,'Value');
 end
 
 %% toggleMask
-function toggleMask(hObject,eventdata,tool)
+function toggleMask(hObject,~,tool)
 % unselect button to prevent activation with spacebar
 set(hObject, 'Enable', 'off');
 drawnow;
@@ -3123,7 +3162,7 @@ end
 end
 
 %% WindowsLevel_callback
-function WindowLevel_callback(hobject,evnt,tool)
+function WindowLevel_callback(~,~,tool)
 range=get(tool.handles.Axes(tool.Nvol),'Clim');
 
 L=str2double(get(tool.handles.Tools.L,'String'));
@@ -3145,7 +3184,7 @@ showSlice(tool)
 end
 
 %% histogramButtonDownFunction
-function histogramButtonDownFunction(hObject,evnt,tool,line)
+function histogramButtonDownFunction(~,~,tool,line)
 
 WBMF_old = get(tool.handles.fig,'WindowButtonMotionFcn');
 WBUF_old = get(tool.handles.fig,'WindowButtonUpFcn');
@@ -3167,7 +3206,7 @@ end
 end
 
 %% scrollWheel
-function scrollWheel(scr,evnt,tool)
+function scrollWheel(~,evnt,tool)
 %Check to see if the mouse is over the axis
 % units=get(tool.handles.fig,'Units');
 % set(tool.handles.fig,'Units','Pixels')
@@ -3235,7 +3274,7 @@ showSlice(tool);
 end
 
 %% newLowerRangePosition
-function newLowerRangePosition(src,evnt,hObject,tool)
+function newLowerRangePosition(~,~,hObject,tool)
 cp = get(hObject,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 range=get(tool.handles.Axes(tool.Nvol),'Clim');
 Xlims=get(hObject,'Xlim');
@@ -3254,7 +3293,7 @@ end
 end
 
 %% newUpperRangePosition
-function newUpperRangePosition(src,evnt,hObject,tool)
+function newUpperRangePosition(~,~,hObject,tool)
 cp = get(hObject,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 range=get(tool.handles.Axes(tool.Nvol),'Clim');
 Xlims=get(hObject,'Xlim');
@@ -3273,7 +3312,7 @@ end
 end
 
 %% newLevelRangePosition
-function newLevelRangePosition(src,evnt,hObject,tool)
+function newLevelRangePosition(~,~,hObject,tool)
 cp = get(hObject,'CurrentPoint'); cp=[cp(1,1) cp(1,2)];
 range=get(tool.handles.Axes(tool.Nvol),'Clim');
 Xlims=get(hObject,'Xlim');
@@ -3291,7 +3330,7 @@ end
 end
 
 %% adjustContrastMouse
-function adjustContrastMouse(src,evnt,bp,hObject,tool,W,L)
+function adjustContrastMouse(~,~,bp,~,tool,W,L)
 cp = get(0,'PointerLocation');
 SS=get( 0, 'Screensize' ); SS=SS(end-1:end); %Get the screen size
 d=round(cp-bp)./SS;
@@ -3317,7 +3356,7 @@ end
 end
 
 %% adjustZoomMouse
-function adjustZoomMouse(src,~,bp,hObject,tool,xlims,ylims,bpA)
+function adjustZoomMouse(~,~,bp,hObject,tool,xlims,ylims,bpA)
 
 %get the zoom factor
 cp = get(0,'PointerLocation');
@@ -3403,7 +3442,7 @@ set(tool.handles.SliceText,'String',['Vol: ' num2str(tool.Nvol) '/' num2str(leng
 end
 
 %% adjustPanMouse
-function adjustPanMouse(src,evnt,bp,hObject,xlims,ylims,scale)
+function adjustPanMouse(~,~,bp,hObject,xlims,ylims,scale)
 cp = get(0,'PointerLocation');
 V = get(hObject,'View'); if iscell(V), V = V{1}; end
 d = scale*(bp-cp);
@@ -3418,7 +3457,7 @@ set(hObject,'Xlim',xlims+d(1),'Ylim',ylims-d(2))
 end
 
 %% buttonUpFunction
-function buttonUpFunction(src,evnt,tool,WBMF_old,WBUF_old)
+function buttonUpFunction(src,~,tool,WBMF_old,WBUF_old)
 %showSlice(tool)
 setptr(tool.handles.fig,'arrow');
 set(src,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
@@ -3426,7 +3465,7 @@ set(src,'WindowButtonMotionFcn',WBMF_old,'WindowButtonUpFcn',WBUF_old);
 end
 
 %% getImageInfo
-function getImageInfo(src,evnt,tool)
+function getImageInfo(~,~,tool)
 current_object = hittest(tool.handles.fig);
 % if Mouse over Mask Selection button
 setmaskstatistics(tool,current_object)
@@ -3506,7 +3545,7 @@ end
 end
 
 %% panelResizeFunction
-function panelResizeFunction(hObject,events,tool,w,h,wbutt)
+function panelResizeFunction(~,~,tool,w,h,wbutt)
 hh = tool.getHandles;
 try
     units=get(hh.Panels.Large,'Units');
@@ -3542,7 +3581,8 @@ try
     set(hh.Tools.maskLoad,'Position',[buff pos(4)-buff-(islct+4)*wbutt wbutt wbutt]);
     
     set(hh.Axes,'XLimMode','manual','YLimMode','manual');
-    
+catch ex
+    warning(ex);
 end
 end
 
@@ -3572,11 +3612,14 @@ if (ndims(icon) == 3) % RGB
 else % indexed
     
     % Look through the colormap for the background color.
-    if isempty(map), idx=1; icon = im2double(repmat(icon, [1 1 3])); return; end
+    if isempty(map)
+        icon = im2double(repmat(icon, [1 1 3]));
+        return
+    end
     for i=1:size(map,1)
         if all(map(i,:) == [0 1 1])
             idx = i;
-            break;
+            break
         end
     end
     
@@ -3603,7 +3646,7 @@ end
 end
 
 %% ShowHistogram
-function ShowHistogram(hObject,evnt,tool,w,h)
+function ShowHistogram(hObject,~,tool,w,h)
 % unselect button to prevent activation with spacebar
 set(hObject, 'Enable', 'off');
 drawnow;
@@ -3634,6 +3677,9 @@ end
 end
 
 %% isMouseOverAxes
+% TODO: Consider whether this function is needed or not. It is not
+% currently called by anything. If it's part of a new feature that's a
+% work-in-progress, keep it. Otherwise, YAGNI... eliminate it.
 function overAxes = isMouseOverAxes(ha)
 %This function checks if the mouse is currently hovering over the axis in
 %question. hf is the handle to the figure, ha is the handle to the axes.
@@ -3646,9 +3692,6 @@ xlims = get(ha,'Xlim');
 ylims = get(ha,'Ylim');
 
 overAxes = x>=xlims(1) & x<=xlims(2) & y>=ylims(1) & y<=ylims(2);
-
-
-
 end
 
 %% displayHelp
@@ -3928,7 +3971,7 @@ for i=1:nargin
         end
     elseif numel(varargin{i})==1
         n = varargin{i};            % a scalar is the image size
-    elseif ndims(varargin{i})==2 && size(varargin{i},2)==10
+    elseif ndims(varargin{i})==2 && size(varargin{i},2)==10 %#ok<*ISMAT>
         e = varargin{i};            % user specified phantom
     else
         eid = sprintf('Images:%s:invalidInputArgs',mfilename);
@@ -4020,7 +4063,7 @@ end
 function checkUpdate()
 mfile = 'imtool3D';
 if ~isdeployed
-    msg = ['Update to the newest version ?'];
+    msg = 'Update to the newest version ?';
     answer = questdlg(msg, ['Update ' mfile], 'Yes', 'Later', 'Yes');
     if ~strcmp(answer, 'Yes'), return; end
     
@@ -4079,12 +4122,15 @@ tool.(var) = val;
 end
 
 %% assignind
+% TODO: Consider whether or not this function is needed. It is not
+% currently called by anything. Is it part of a work-in-progress feature?
+% Otherwise, YAGNI... eliminate it.
 function var = assignind(var,ind,val)
 var(ind) = val;
 end
 
 %% onDrop
-function onDrop(tool, listener, evtArg)
+function onDrop(tool, ~, evtArg)
 ht = wait_msgbox;
 imformatlist = imformats;
 
@@ -4098,6 +4144,7 @@ if length(data)==1 && isdir(data{1})
     imlist = [imlist dir(fullfile(data{1},'*.jpg'))];
     if length(imlist)>1
     I = {};
+    % TODO: Preallocate I variable
     for ii = 1:length(imlist)
         if strcmp(imlist(ii).name(1),'.'), continue; end
         I = [I {imread(fullfile(data{1},imlist(ii).name))}];
@@ -4109,6 +4156,7 @@ else
     [~,~,ext] = fileparts(data{1});
     if exist(['imread' lower(ext(2:end)) '.m'],'file')
         fun = str2func(['imread' lower(ext(2:end))]);
+        % TODO: Preallocate dat variable
         for id = 1:length(data)
             dat{id} = fun(data{id});
         end
@@ -4121,17 +4169,20 @@ else
                 for id = 1:length(data)
                     info = imfinfo(data{id});
                     num_images = numel(info);
+                    % TODO: Preallocate dat variable
                     for k = 1:num_images
                         dat{id}(:,:,k) = imread(data{id}, k);
                     end
                 end
                 hdr.pixdim = [1 1 1 1];
             case cellfun(@(x) ['.' x], [imformatlist.ext], 'UniformOutput', false)
+                % TODO: Preallocate dat variable
                 for id = 1:length(data)
                     dat{id} = imread(data{id});
                 end
                 hdr.pixdim = [1 1 1 1];
             case '.mat'
+                % TODO: Preallocate dat variable
                 for id = 1:length(data)
                     tmp = load(data{id});
                     ff = fieldnames(tmp);

@@ -41,7 +41,7 @@ classdef imtool3D_3planes < handle
             mask=[];
             parent=[];
             range=[];
-            if length(varargin)>0, dat = varargin{1}; end
+            if ~isempty(varargin), dat = varargin{1}; end
             if length(varargin)>1, mask = varargin{2}; end
             if length(varargin)>2, parent = varargin{3}; end
             if length(varargin)>3, range = varargin{4}; end
@@ -212,6 +212,7 @@ classdef imtool3D_3planes < handle
             set(get(hp,'Children'),'Visible','off')
             set(hp,'Visible','on')
             bgc = get(hp,'BackgroundColor');
+            % TODO: Preallocate ContrastWBDF variable
             for ii=1:3
                 ContrastWBDF{ii} = get(tool(ii).getHandles.I(1),'ButtonDownFcn');
             end
@@ -334,7 +335,7 @@ classdef imtool3D_3planes < handle
         
         %% showcross
         function showcross(tool3P)            
-            tool = tool3P.tool;
+            tool = tool3P.tool; %#ok<*PROP>
             S = tool(1).getImageSize;
             set(tool3P.cross.X1,'XData',[tool(3).getCurrentSlice tool(3).getCurrentSlice])
             set(tool3P.cross.X1,'YData',[0 S(1)])
@@ -442,7 +443,7 @@ end
 end
 
 %% scrollWheel
-function scrollWheel(src, evnt, tool)
+function scrollWheel(~, evnt, tool)
 currentobj = hittest;
 for ii=1:length(tool)
     try
@@ -454,6 +455,8 @@ for ii=1:length(tool)
             end
             
         end
+    catch ex
+        warning(ex);
     end
 end
 end
@@ -493,7 +496,7 @@ end
 end
 
 %% lbosection (change left button mode)
-function lboselection(source,event,tool3P,ContrastWBDF)
+function lboselection(~,event,tool3P,ContrastWBDF)
 tool = tool3P.getTool();
 for ii = 1:3
     switch get(event.NewValue,'String')

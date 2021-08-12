@@ -248,7 +248,7 @@ classdef imtool3DROI_ellipse < imtool3DROI_rect
             mask=stats.mask;
             
             %Crop the image
-            [Yind Xind]=ind2sub(size(im),find(mask(:)));
+            [Yind, Xind]=ind2sub(size(im),find(mask(:)));
             im=im(min(Yind):max(Yind),min(Xind):max(Xind));
             
             %Upsample the image
