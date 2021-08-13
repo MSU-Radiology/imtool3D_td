@@ -88,7 +88,8 @@ classdef imtool3D < handle
     % tool.RGBdim = 3;
     % tool.RGBindex = [1 2 3];
     %
-    % Note: Use the button bellow left slider ('.' or 'R','G','B') to turn between RGB and grayscale and to select active color channel 
+    % Note: Use the button bellow left slider ('.' or 'R','G','B') to turn between RGB and grayscale and to select 
+    % active color channel 
     %
     %
     % ## include in a GUI
@@ -288,8 +289,8 @@ classdef imtool3D < handle
         Ntime        % Current time
         range        % Range of images
         NvolOpts     % [Struct] with .Climits (color limits (Clim) for each Nvol to display images in I (cell))
-                     %               .Opacity
-                     %               .Cmap (color map per Nvol)
+        %               .Opacity
+        %               .Cmap (color map per Nvol)
         mask         %Indexed mask that can be overlaid on the image data
         maskHistory  %History of mask  for undo
         maskSelected %Index of the selected mask color
@@ -301,7 +302,7 @@ classdef imtool3D < handle
         alpha        %transparency of the overlaid mask (default is .2)
         Orient       % [0,-90] vertical or horizontal
         aspectRatio = [1 1 1];
-        viewplane    = 3; % Direction of the 3rd dimension
+        viewplane = 3;  % Direction of the 3rd dimension
         optdlg       % option dialog object
     end
     
@@ -309,19 +310,20 @@ classdef imtool3D < handle
     properties
         windowSpeed=2; %Ratio controls how fast the window and level change when you change them with the mouse
         upsample = false;
-        upsampleMethod = 'lanczos3'; %Can be any of {'bilinear','bicubic','box','triangle','cubic','lanczos2','lanczos3'}
-        Visible = true;              %lets the user hide the imtool3D panel
-        grid    = false;
+        upsampleMethod = 'lanczos3';    % Can be any of {'bilinear', 'bicubic', 'box', 'triangle', 'cubic', 'lanczos2', 
+                                        % 'lanczos3'}
+        Visible = true; % lets the user hide the imtool3D panel
+        grid = false;
         montage = false;
         brushsize = 5; % default size of the brush
-        gamma = 1; % gamma correction
-        isRGB        = false; % colored image?
-        RGBindex     = [1 2 3]; % R, G, and B bands index in case of color image
-        RGBdim       = 3; % [3, 4 or 5] dimension along which RGB planes are extracted
+        gamma = 1;  % gamma correction
+        isRGB = false; % colored image?
+        RGBindex = [1 2 3]; % R, G, and B bands index in case of color image
+        RGBdim = 3; % [3, 4 or 5] dimension along which RGB planes are extracted
         RGBdecorrstretch = false;
         RGBalignhisto = false;
         registrationMode = false;
-        label        = {''};
+        label = {''};
     end
     
     %% Dependent Properties
@@ -340,7 +342,6 @@ classdef imtool3D < handle
     
     %% Public Class Methods
     methods
-        %% imtool3D
         function tool = imtool3D(varargin)  %Constructor
             
             % Parse Inputs
@@ -348,8 +349,14 @@ classdef imtool3D < handle
             
             % display figure
             try
-                Orient = uigetpref('imtool3D','rot90','Set orientation','How to display the first dimension of the matrix?',{'Vertically (Photo)','Horizontally (Medical)'},'CheckboxState',1,'HelpString','Help','HelpFcn','helpdlg({''If this option is wrongly set, image will be rotated by 90 degree.'', ''Horizontal orientation is usually used in Medical (first dimension is Left-Right)'', '''', ''This preference can be reset in the Settings menu (<about> button).'', '''', ''Orientation can also be changed while viewing an image using the command: tool.setOrient(''''vertical'''')''})'); 
-            catch
+                Orient = uigetpref('imtool3D', 'rot90', 'Set orientation', ...
+                    'How to display the first dimension of the matrix?', ...
+                    {'Vertically (Photo)', 'Horizontally (Medical)'}, ...
+                    'CheckboxState', 1, ...
+                    'HelpString', 'Help', ...
+                    'HelpFcn', @imtool3DHelpFcn);
+            catch ex
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                 Orient = 'vertical';
             end
             if isempty(h)
@@ -366,9 +373,9 @@ classdef imtool3D < handle
                 end
                 
                 if strfind(lower(Orient),'vertical')
-                        AI=S(2)/S(1); %input Ratio of the image
+                    AI=S(2)/S(1); %input Ratio of the image
                 else
-                        AI=S(1)/S(2); %input Ratio of the image
+                    AI=S(1)/S(2); %input Ratio of the image
                 end
                 
                 if Af>AI    %Figure is too wide, make it taller to match
@@ -383,12 +390,13 @@ classdef imtool3D < handle
                     ScreenSizeW = java.awt.Toolkit.getDefaultToolkit.getScreenSize.getWidth;
                     ScreenSizeH = java.awt.Toolkit.getDefaultToolkit.getScreenSize.getHeight;
                     screensize=[0 0 ScreenSizeW ScreenSizeH];
-                catch
+                catch ex
+                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                     screensize = get(0,'ScreenSize');
                 end
                 pos(3)=min(max(700,pos(3)),screensize(3)*.9);
                 pos(4)=min(max(500,pos(4)),screensize(4)*.9);
-
+                
                 %make sure the figure is centered
                 pos(1) = ceil((screensize(3)-pos(3))/2);
                 pos(2) = ceil((screensize(4)-pos(4))/2);
@@ -414,12 +422,12 @@ classdef imtool3D < handle
             tool.handles.fig=fig;
             tool.handles.parent = h;
             tool.maskColor = [  0     0     0;
-                                1     0     0;
-                                1     1     0;
-                                0     1     0;
-                                0     1     1;
-                                0     0     1;
-                                1     0     1];
+                1     0     0;
+                1     1     0;
+                0     1     0;
+                0     1     1;
+                0     0     1;
+                1     0     1];
             tool.maskColor = cat(1,tool.maskColor,colorcube(30));
             tool.maskColor(end-5:end,:) = [];
             tool.maskColor(end+1,:)     = [0.8500    0.3250    0.0980];
@@ -443,7 +451,13 @@ classdef imtool3D < handle
             tool.handles.Panels.Info   =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[0 0 pos(3) w],'Title','');
             try
                 set(cell2mat(struct2cell(tool.handles.Panels)),'BackgroundColor','k','ForegroundColor','w','HighlightColor','k')
-            catch
+            catch ex
+                switch(ex.identifier)
+                    case 'MATLAB:cell2mat:UnsupportedCellContent'
+                        % ignore
+                    otherwise
+                        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                end
                 objarr=struct2cell(tool.handles.Panels);
                 objarr=[objarr{:}];
                 set(objarr,'BackgroundColor','k','ForegroundColor','w','HighlightColor','k');
@@ -462,7 +476,7 @@ classdef imtool3D < handle
             tool.handles.uimenu.RGB(5) = uimenu('Parent',tool.handles.uimenu.RGB(2),'Label','volume (5th)','Callback',@(src,evnt) assignval(tool,'RGBdim',5));
             tool.handles.uimenu.RGB(6) = uimenu('Parent',c,'Label','RGB index','Callback',@(src,evnt) dlgsetRGBindex(tool));
             tool.handles.uimenu.RGB(7) = uimenu('Parent',c,'Label','align RGB bands','Callback',@(src,evnt) assignval(tool,'RGBalignhisto',~tool.RGBalignhisto));
-
+            
             %Create Slider for scrolling through image stack
             tool.handles.Slider         =   uicontrol(tool.handles.Panels.Slider,'Style','Slider','Position',[0 wbutt w pos(4)-2*w-wbutt],'TooltipString','Change Slice (can use scroll wheel also)');
             scrollfun = getpref('imtool3D','ScrollWheelFcn','slice');
@@ -497,7 +511,7 @@ classdef imtool3D < handle
             uimenu('Parent',c,'Label','50%','Callback',@(s,h) assignval(tool, 'rescaleFactor',.5))
             uimenu('Parent',c,'Label','200%','Callback',@(s,h) assignval(tool, 'rescaleFactor',2))
             uimenu('Parent',c,'Label','400%','Callback',@(s,h) assignval(tool, 'rescaleFactor',4))
-
+            
             % Help Annotation when cursor hover Help Button
             tool.handles.HelpAnnotation = [];
             %Set up mouse button controls
@@ -515,18 +529,18 @@ classdef imtool3D < handle
             % used, then keep it and uncomment when adding the code block
             % that will use the variable. Otherwise, this should be purged
             % per the YAGNI principle.
-%             % icon directory
-%             if ~isdeployed
-%                 MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
-%             else
-%                 if ~ispc
-%                     MATLABdir = '/opt/mcr/v95/mcr/toolbox/matlab/icons';
-%                 else
-%                     % TODO:
-%                     MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
-%                 end
-%             end
-
+            %             % icon directory
+            %             if ~isdeployed
+            %                 MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
+            %             else
+            %                 if ~ispc
+            %                     MATLABdir = '/opt/mcr/v95/mcr/toolbox/matlab/icons';
+            %                 else
+            %                     % TODO:
+            %                     MATLABdir = fullfile(toolboxdir('matlab'), 'icons');
+            %                 end
+            %             end
+            
             %Create the histogram plot
             %set(tool.handles.Panels.Image,'Visible','off')
             if enableHist
@@ -583,7 +597,7 @@ classdef imtool3D < handle
             tool.handles.Tools.TO       =   uicontrol(tool.handles.Panels.Tools,'Style','text','String','O','Position',[lp+2*buff+6*w buff w w],'BackgroundColor','k','ForegroundColor','w','TooltipString',sprintf('Opacity'));
             tool.handles.Tools.O        =   uicontrol(tool.handles.Panels.Tools,'Style','Edit','String','1','Position',[lp+2*buff+7*w buff w w],'TooltipString',sprintf('Opacity'),'BackgroundColor',[.2 .2 .2],'ForegroundColor','w');
             tool.handles.Tools.SO       =   uicontrol(tool.handles.Panels.Tools,'Style','Slider','Position',[lp+2*buff+8*w buff w/2 w],'TooltipString',sprintf('Opacity'),'Min',0,'Max',1,'Value',1,'SliderStep',[.1 .1]);
-
+            
             lp=lp+3*buff+8.5*w;
             
             %Creat window and level callbacks
@@ -592,10 +606,10 @@ classdef imtool3D < handle
             funAutoRange = @(src,evnt) tool.setClimits(double(range_outlier(tool.I{tool.Nvol}(:),5)));
             c = uicontextmenu(tool.handles.fig);
             set(tool.handles.Tools.L,'Callback',fun,'UIContextMenu',c); % right click set the same range for all volumes
-            set(tool.handles.Tools.U,'Callback',fun,'UIContextMenu',c); 
+            set(tool.handles.Tools.U,'Callback',fun,'UIContextMenu',c);
             uimenu('Parent',c,'Label','Auto window level','Callback',funAutoRange)
             uimenu('Parent',c,'Label','Same window level for all volumes','Callback',funSameWL)
-
+            
             fun=@(hobject,evnt) setOpacity(tool,[], hobject);
             set(tool.handles.Tools.O,'Callback',fun);
             set(tool.handles.Tools.SO,'Callback',fun);
@@ -793,7 +807,13 @@ classdef imtool3D < handle
             %Set font size of all the tool objects
             try
                 set(cell2mat(struct2cell(tool.handles.Tools)),'FontSize',9,'Units','Pixels')
-            catch
+            catch ex
+                switch(ex.identifier)
+                    case 'MATLAB:cell2mat:UnsupportedCellContent'
+                        % ignore
+                    otherwise
+                        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                end
                 objarr=struct2cell(tool.handles.Tools);
                 objarr=[objarr{:}];
                 set(objarr,'FontSize',9,'Units','Pixels')
@@ -837,7 +857,7 @@ classdef imtool3D < handle
                 dndobj.DropFileFcn = @(s, e)onDrop(tool, s, e); %,'DragEnterFcn',@(s,e) setVis(txt_drop,1),'DragExitFcn',@(s,e) setVis(txt_drop,0));
                 warning(wrn);
             catch err
-                warning(err.message)
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
         
@@ -1068,7 +1088,8 @@ classdef imtool3D < handle
                             pixdim = [1 1 1];
                             label = 'Paris multispectral (7 bands) LandSat';
                     end
-                catch % mri file not available
+                catch ex % mri file not available
+                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                     S = [64 64 64];
                     pixdim = [1/S(1) 1/S(2) 1/S(3)];
                     phantom3 = phantom3d('Modified Shepp-Logan',S(1));
@@ -1121,7 +1142,7 @@ classdef imtool3D < handle
             end
             
             range = tool.NvolOpts.Climits{1};
-
+            
             tool.Nvol = 1;
             
             tool.I=I;
@@ -1140,7 +1161,8 @@ classdef imtool3D < handle
                 set(tool.handles.HistImage(1),'CData',repmat(tool.centers,[round(pos(4)) 1]),'XData',[min(tool.centers) max(tool.centers)]);
                 try
                     xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)])
-                catch
+                catch ex
+                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                     xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)+.1])
                 end
                 set(tool.handles.HistImage,'XData',[1 256]);
@@ -1184,14 +1206,14 @@ classdef imtool3D < handle
             try
                 setupGrid(tool);
             catch ex
-                warning(ex);
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
             
             % Create missing image objects
             for it = (length(tool.handles.I)+1):length(I)
                 tool.handles.Axes(it)           =   axes('Position',[0 0 1 1],...
-                                                         'Parent',tool.handles.Panels.Image,...
-                                                         'Color','none');
+                    'Parent',tool.handles.Panels.Image,...
+                    'Color','none');
                 tool.handles.I(it)              =   imshow(zeros(3,3),range,'Parent',tool.handles.Axes(it));
                 set(tool.handles.I(it),'Clipping','off')
                 fun=@(hObject,eventdata) imageButtonDownFunction(hObject,eventdata,tool);
@@ -1206,7 +1228,7 @@ classdef imtool3D < handle
             setOrient(tool,getOrient(tool),0)
             xlim(tool.handles.Axes,get(tool.handles.Axes(1),'XLim'))
             ylim(tool.handles.Axes,get(tool.handles.Axes(1),'YLim'))
-
+            
             %Show the first slice
             tool.Nvol = 1;
             showSlice(tool)
@@ -1253,7 +1275,7 @@ classdef imtool3D < handle
             % tool.setNvol(Nvol) sets the image to display
             
             if ~exist('saveClim','var'), saveClim = true; end % save Clim by default
-
+            
             % save window and level
             if saveClim
                 tool.NvolOpts.Climits{tool.Nvol} = get(tool.handles.Axes(tool.Nvol),'Clim');
@@ -1283,7 +1305,8 @@ classdef imtool3D < handle
                 if isfield(tool.handles,'HistAxes')
                     try
                         xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)])
-                    catch
+                    catch ex
+                        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                         xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)+.1])
                     end
                     set(tool.handles.HistImageAxes,'Units','Pixels'); pos=get(tool.handles.HistImageAxes,'Position'); set(tool.handles.HistImageAxes,'Units','Normalized');
@@ -1293,14 +1316,14 @@ classdef imtool3D < handle
             % show volume and hide volumes overlayed on top
             set(tool.handles.I(tool.Nvol),'Visible','on')
             set(tool.handles.I(tool.Nvol+1:length(tool.handles.I)),'Visible','off')
-
+            
             showSlice(tool);
         end
         
         %% setlabel
         function setlabel(tool,label)
             % tool.label = label; set the text displayed on top of images
-            % tool.label = {'MRI'}; 
+            % tool.label = {'MRI'};
             tool.label = label;
         end
         
@@ -1355,7 +1378,7 @@ classdef imtool3D < handle
         %% getHandles
         function handles=getHandles(tool)
             % h=tool.getHandles() get handles to all objects in imtool3D
-            % ex: 
+            % ex:
             %   set(h.Panels.ROItools,'Visible','off') % hides the ROItools
             handles=tool.handles;
         end
@@ -1436,9 +1459,9 @@ classdef imtool3D < handle
             try
                 setupGrid(tool);
             catch ex
-                warning(ex);
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
-
+            
             
             switch dim
                 case 1
@@ -1457,8 +1480,8 @@ classdef imtool3D < handle
         end
         
         %% set.label
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.label(tool,label)
             if ischar(label) || isstring(label)
@@ -1488,14 +1511,14 @@ classdef imtool3D < handle
             % tool.setOpacity(Opac) set opacity of current image
             % ex: tool.setOpacity(0.2)
             if ~exist('hObject','var') || isempty(hObject)
-                hObject = tool.handles.Tools.O; 
+                hObject = tool.handles.Tools.O;
             else
                 % unselect button to prevent activation with spacebar
                 set(hObject, 'Enable', 'off');
                 drawnow;
                 set(hObject, 'Enable', 'on');
             end
-
+            
             if ~exist('O','var') || isempty(O)
                 switch get(hObject,'Style')
                     case 'edit'
@@ -1601,9 +1624,9 @@ classdef imtool3D < handle
             % The ColorChannel variable assignment is unused. If this isn't
             % work-in-progress code that will be used, recommend removal
             % because YAGNI.
-%             ColorChannel = get(tool.handles.SliderColor,'String');
+            %             ColorChannel = get(tool.handles.SliderColor,'String');
             
-
+            
             if ~tool.isRGB
                 switch tool.viewplane
                     case 1
@@ -1617,7 +1640,7 @@ classdef imtool3D < handle
                             im = tool.I{tool.Nvol}(:,:,slice,min(end,tool.Ntime),:,:);
                         end
                 end
-
+                
             else % RGB photo
                 switch tool.viewplane
                     case 1
@@ -1630,7 +1653,7 @@ classdef imtool3D < handle
                         order = [1 2 3 4 5 6 7];
                         im = tool.I{tool.Nvol};
                 end
-
+                
                 switch tool.RGBdim
                     case 3
                         im = im(:,:,min(tool.RGBindex,end),min(end,tool.Ntime));
@@ -1672,7 +1695,7 @@ classdef imtool3D < handle
             set(hObject, 'Enable', 'off');
             drawnow;
             set(hObject, 'Enable', 'on');
-
+            
             maps=get(hObject,'String');
             if ~exist('cmap','var') ||isempty(cmap)
                 n=get(hObject,'Value');
@@ -1682,14 +1705,14 @@ classdef imtool3D < handle
             end
             set(tool.handles.Tools.Color,'Value',n);
             if ~isnumeric(cmap)
-            switch cmap
-                case 'red'
-                    cmap = [linspace(0,1,256)' zeros(256,2)];
-                case 'green'
-                    cmap = [zeros(256,1) linspace(0,1,256)' zeros(256,1)];
-                case 'blue'
-                    cmap = [zeros(256,2) linspace(0,1,256)'];
-            end
+                switch cmap
+                    case 'red'
+                        cmap = [linspace(0,1,256)' zeros(256,2)];
+                    case 'green'
+                        cmap = [zeros(256,1) linspace(0,1,256)' zeros(256,1)];
+                    case 'blue'
+                        cmap = [zeros(256,2) linspace(0,1,256)'];
+                end
             end
             h = tool.getHandles;
             colormap(h.Axes(tool.Nvol),cmap)
@@ -1836,7 +1859,7 @@ classdef imtool3D < handle
             try
                 delete(tool.handles.PaintBrushObject)
             catch ex
-                warning(ex);
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
             tool.handles.PaintBrushObject=[];
         end
@@ -1850,7 +1873,7 @@ classdef imtool3D < handle
                 H = tool.optdlg.getHandles();
                 delete(H.fig)
             catch ex
-                warning(ex);
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
         
@@ -1861,8 +1884,8 @@ classdef imtool3D < handle
         end
         
         %% get.rescaleFactor
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function rescaleFactor = get.rescaleFactor(tool)
             %Get aspect ratio of image as currently being displayed
@@ -1885,8 +1908,8 @@ classdef imtool3D < handle
         end
         
         %% set.rescaleFactor
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.rescaleFactor(tool, value)
             %Get aspect ratio of image as currently being displayed
@@ -1925,8 +1948,8 @@ classdef imtool3D < handle
         end
         
         %% set.upsample
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.upsample(tool,upsample)
             tool.upsample = logical(upsample);
@@ -1934,8 +1957,8 @@ classdef imtool3D < handle
         end
         
         %% set.upsampleMethod
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.upsampleMethod(tool,upsampleMethod)
             switch upsampleMethod
@@ -1949,8 +1972,8 @@ classdef imtool3D < handle
         end
         
         %% set.gamma
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.gamma(tool,gamma)
             tool.gamma = gamma;
@@ -1958,8 +1981,8 @@ classdef imtool3D < handle
         end
         
         %% set.RGBdecorrstretch
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.RGBdecorrstretch(tool,decorr)
             tool.RGBdecorrstretch = logical(decorr);
@@ -1967,8 +1990,8 @@ classdef imtool3D < handle
         end
         
         %% set.RBGalignhisto
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.RGBalignhisto(tool,RGBalignhisto)
             tool.RGBalignhisto = logical(RGBalignhisto);
@@ -1981,13 +2004,13 @@ classdef imtool3D < handle
             end
             showSlice(tool);
             onoff = {'off','on'};
-            H = tool.getHandles;            
+            H = tool.getHandles;
             set(H.uimenu.RGB(7),'Checked',onoff{1+tool.RGBalignhisto});
         end
         
         %% set.RGBindex
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.RGBindex(tool,index)
             tool.RGBindex = index;
@@ -2007,8 +2030,8 @@ classdef imtool3D < handle
         end
         
         %% set.RGBdim
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.RGBdim(tool,dim)
             if ~ismember(dim,[3 4 5 6])
@@ -2024,8 +2047,8 @@ classdef imtool3D < handle
         end
         
         %% set.isRGB
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.isRGB(tool,iscolor)
             tool.isRGB = logical(iscolor);
@@ -2040,8 +2063,8 @@ classdef imtool3D < handle
         end
         
         %% set.Visible
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.Visible(tool,Visible)
             if Visible
@@ -2053,8 +2076,8 @@ classdef imtool3D < handle
         end
         
         %% set.grid
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.grid(tool,Visible)
             % TODO: Fix the dependency on the handles property
@@ -2069,12 +2092,12 @@ classdef imtool3D < handle
         end
         
         %% set.montage
-        % TODO: It would be appropriate to organize all of the class 
-        % property getters/setters together in a contiguous block in the 
+        % TODO: It would be appropriate to organize all of the class
+        % property getters/setters together in a contiguous block in the
         % source file
         function set.montage(tool,montagemode)
             tool.montage = logical(montagemode);
-            % TODO: Fix the dependency on the handles, I, Nvol, and 
+            % TODO: Fix the dependency on the handles, I, Nvol, and
             % viewplane properties
             set(tool.handles.Tools.montage,'Value',tool.montage)
             showSlice(tool,12+(1-get(tool.handles.Tools.montage,'Value'))*(round(size(tool.I{tool.Nvol},tool.viewplane)/2)-12)); % show 12 slices by default
@@ -2194,7 +2217,7 @@ classdef imtool3D < handle
                 try
                     I = getframe(h.Axes(tool.Nvol)); I = I.cdata;
                 catch ex
-                    warning(ex);
+                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                     I=get(h.I,'CData');
                 end
                 if iscell(I), I = I{tool.Nvol}; end
@@ -2206,7 +2229,7 @@ classdef imtool3D < handle
                     imwrite(cat(2,I,repmat(round(linspace(size(cmap,1),0,size(I,1)))',[1 round(size(I,2)/50)])),cmap,[PathName FileName])
                 else
                     if strfind(imformats{ext,1},'gif')
-                        [I,cm] = rgb2ind(I,256); 
+                        [I,cm] = rgb2ind(I,256);
                         if ~exist(fullfile(PathName, FileName),'file')
                             imwrite(I,cm,fullfile(PathName, FileName),'gif','Loopcount',inf);
                         else
@@ -2383,8 +2406,8 @@ classdef imtool3D < handle
             if toc(timer)<0.1
                 return;
             end
-
-             % Parse inputs
+            
+            % Parse inputs
             switch nargin
                 case 1
                     tool=varargin{1};
@@ -2409,112 +2432,113 @@ classdef imtool3D < handle
             Nvol = tool.Nvol;
             for ivol = 1:Nvol
                 tool.Nvol = ivol;
-            % Get Slice to show
-            Orient = abs(tool.Orient)>45;
-            if get(tool.handles.Tools.montage,'Value')
-                n = max(n,3);
-                I = tool.getImage;
-                M = tool.getMask(1);
-                Indices = unique(round(linspace(1,size(I,tool.viewplane),n)));
-                switch tool.viewplane
-                    case 1
-                        order = [2 3 1];
-                    case 2
-                        order = [1 3 2];
-                    case 3
-                        order = [1 2 3];
-                end
-                if Orient
-                    I = permute(I,order([2 1 3]));
-                    M = permute(M,order([2 1 3]));
-                else
-                    I = permute(I,order);
-                    M = permute(M,order);
-                end
-                S = size(I);
-                [In,Mrows,Mcols]    = imagemontage(I,Indices);
-                maskn = imagemontage(M,Indices);
-                if Orient
-                    In = permute(In,[2 1 3]);
-                    maskn = permute(maskn,[2 1 3]);
-                    S = S([2 1]);
-                end
-                newAspectRatio = size(In)./[S(1) S(2)];
-                set(tool.handles.Tools.montage,'UserData',[Mrows Mcols Indices(:)']);
-                set(tool.handles.Axes,'DataAspectRatio',tool.getAspectRatio.*[newAspectRatio 1]);
-            else
-                In = squeeze(tool.getCurrentImageSlice);
-                maskn = squeeze(tool.getCurrentMaskSlice(1));
-                tool.setAspectRatio(tool.aspectRatio)
-            end
-            
-            % Manage brighness / contrast for colour images
-            if size(In,3) > 1
-                CL = get(tool.handles.Axes(tool.Nvol),'Clim');
-                InOrig = In(round(linspace(1,end,min(end,70))),round(linspace(1,end,min(end,70))),:); % keep small version of original for histo
-                InOrig = reshape(InOrig,[numel(InOrig)/3 3]);
-                
-                if tool.RGBalignhisto
-                    %In = imadjust(In,stretchlim(In));
-
-                    RGBstd = std(double(InOrig),0,1);
-                    RGBmean = mean(double(InOrig),1);
-                    for iband = 1:3
-                        factor = 50/RGBstd(iband);
-                        In(:,:,iband) = (double(In(:,:,iband))-RGBmean(iband))*factor+128;
-                        InOrig(:,iband) =  (double(InOrig(:,iband))-RGBmean(iband))*factor+128;
+                % Get Slice to show
+                Orient = abs(tool.Orient)>45;
+                if get(tool.handles.Tools.montage,'Value')
+                    n = max(n,3);
+                    I = tool.getImage;
+                    M = tool.getMask(1);
+                    Indices = unique(round(linspace(1,size(I,tool.viewplane),n)));
+                    switch tool.viewplane
+                        case 1
+                            order = [2 3 1];
+                        case 2
+                            order = [1 3 2];
+                        case 3
+                            order = [1 2 3];
                     end
-                    range = [0 255];
+                    if Orient
+                        I = permute(I,order([2 1 3]));
+                        M = permute(M,order([2 1 3]));
+                    else
+                        I = permute(I,order);
+                        M = permute(M,order);
+                    end
+                    S = size(I);
+                    [In,Mrows,Mcols]    = imagemontage(I,Indices);
+                    maskn = imagemontage(M,Indices);
+                    if Orient
+                        In = permute(In,[2 1 3]);
+                        maskn = permute(maskn,[2 1 3]);
+                        S = S([2 1]);
+                    end
+                    newAspectRatio = size(In)./[S(1) S(2)];
+                    set(tool.handles.Tools.montage,'UserData',[Mrows Mcols Indices(:)']);
+                    set(tool.handles.Axes,'DataAspectRatio',tool.getAspectRatio.*[newAspectRatio 1]);
                 else
+                    In = squeeze(tool.getCurrentImageSlice);
+                    maskn = squeeze(tool.getCurrentMaskSlice(1));
+                    tool.setAspectRatio(tool.aspectRatio)
+                end
+                
+                % Manage brighness / contrast for colour images
+                if size(In,3) > 1
+                    CL = get(tool.handles.Axes(tool.Nvol),'Clim');
+                    InOrig = In(round(linspace(1,end,min(end,70))),round(linspace(1,end,min(end,70))),:); % keep small version of original for histo
+                    InOrig = reshape(InOrig,[numel(InOrig)/3 3]);
+                    
+                    if tool.RGBalignhisto
+                        %In = imadjust(In,stretchlim(In));
+                        
+                        RGBstd = std(double(InOrig),0,1);
+                        RGBmean = mean(double(InOrig),1);
+                        for iband = 1:3
+                            factor = 50/RGBstd(iband);
+                            In(:,:,iband) = (double(In(:,:,iband))-RGBmean(iband))*factor+128;
+                            InOrig(:,iband) =  (double(InOrig(:,iband))-RGBmean(iband))*factor+128;
+                        end
+                        range = [0 255];
+                    else
+                        range = tool.range{tool.Nvol};
+                    end
+                    tool.centers = linspace(range(1)-diff(range)*0.05,range(2)+diff(range)*0.05,256*3);
+                    if isfield(tool.handles,'HistAxes')
+                        try
+                            xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)])
+                        catch ex
+                            warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                            xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)+.1])
+                        end
+                        set(tool.handles.HistImageAxes,'Units','Pixels'); pos=get(tool.handles.HistImageAxes,'Position'); set(tool.handles.HistImageAxes,'Units','Normalized');
+                        set(tool.handles.HistImage,'CData',repmat(tool.centers,[round(pos(4)) 1]));
+                    end
+                    
+                    In = min(CL(2),max(CL(1),In));
+                    In = cast((In - CL(1))*(255/diff(CL)),'uint8');
+                    
+                    
+                    if tool.RGBdecorrstretch
+                        In = decorrstretch(In);
+                    end
+                end
+                
+                % apply gamma correction
+                if tool.gamma ~= 1
                     range = tool.range{tool.Nvol};
-                end
-                tool.centers = linspace(range(1)-diff(range)*0.05,range(2)+diff(range)*0.05,256*3);
-                if isfield(tool.handles,'HistAxes')
-                    try
-                        xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)])
-                    catch
-                        xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)+.1])
+                    
+                    % TODO: preallocate lut variable
+                    switch class(In)
+                        case 'uint8' % gamma between 0 and 255
+                            lut = uint8(linspace(0,1,256).^tool.gamma*255);
+                            In(:) = lut(In(:)+1);
+                        case 'uint16' % gamma between range(1) and range(2)
+                            range = round(range);
+                            lut = uint16(linspace(0,1,diff(range)).^tool.gamma*diff(range));
+                            lut = [zeros(1,range(1)-1,'uint16'), lut, range(2)*ones(1,2^16-range(2)+1,'uint16')];
+                            In(:) = lut(In(:)+1);
+                        otherwise % gamma between range(1) and range(2)
+                            In = (max(0,double(In)-range(1))/diff(range)).^tool.gamma*diff(range)+range(1);
                     end
-                    set(tool.handles.HistImageAxes,'Units','Pixels'); pos=get(tool.handles.HistImageAxes,'Position'); set(tool.handles.HistImageAxes,'Units','Normalized');
-                    set(tool.handles.HistImage,'CData',repmat(tool.centers,[round(pos(4)) 1]));
                 end
-
-                In = min(CL(2),max(CL(1),In));
-                In = cast((In - CL(1))*(255/diff(CL)),'uint8');
-
                 
-                if tool.RGBdecorrstretch
-                    In = decorrstretch(In);
+                % SHOW SLICE
+                Opac = tool.NvolOpts.Opacity{ivol};
+                if ~tool.upsample || get(tool.handles.Tools.montage,'Value')
+                    set(tool.handles.I(tool.Nvol),'CData',In,'AlphaData',Opac,'XData',get(tool.handles.I(1),'XData'),'YData',get(tool.handles.I(1),'YData'))
+                else
+                    Inresized = imresize_noIPT(In,size(In)*2,tool.upsampleMethod);
+                    set(tool.handles.I(tool.Nvol),'CData',Inresized,'AlphaData',Opac,'XData',get(tool.handles.I(1),'XData'),'YData',get(tool.handles.I(1),'YData'))
                 end
-            end
-            
-            % apply gamma correction
-            if tool.gamma ~= 1
-                range = tool.range{tool.Nvol};
-                
-                % TODO: preallocate lut variable
-                switch class(In)
-                    case 'uint8' % gamma between 0 and 255
-                        lut = uint8(linspace(0,1,256).^tool.gamma*255);
-                        In(:) = lut(In(:)+1);
-                    case 'uint16' % gamma between range(1) and range(2)
-                        range = round(range);
-                        lut = uint16(linspace(0,1,diff(range)).^tool.gamma*diff(range));
-                        lut = [zeros(1,range(1)-1,'uint16'), lut, range(2)*ones(1,2^16-range(2)+1,'uint16')];
-                        In(:) = lut(In(:)+1);
-                    otherwise % gamma between range(1) and range(2)
-                        In = (max(0,double(In)-range(1))/diff(range)).^tool.gamma*diff(range)+range(1);
-                end
-            end
-            
-            % SHOW SLICE
-            Opac = tool.NvolOpts.Opacity{ivol};
-            if ~tool.upsample || get(tool.handles.Tools.montage,'Value')
-                set(tool.handles.I(tool.Nvol),'CData',In,'AlphaData',Opac,'XData',get(tool.handles.I(1),'XData'),'YData',get(tool.handles.I(1),'YData'))
-            else
-                Inresized = imresize_noIPT(In,size(In)*2,tool.upsampleMethod);
-                set(tool.handles.I(tool.Nvol),'CData',Inresized,'AlphaData',Opac,'XData',get(tool.handles.I(1),'XData'),'YData',get(tool.handles.I(1),'YData'))
-            end
             end
             tool.Nvol = Nvol;
             if numel(maskn)>10e7 || ~any(maskn(:))
@@ -2541,7 +2565,8 @@ classdef imtool3D < handle
                 if length(label)>70
                     label =  ['..' label(max(1,length(label)-70):end)];
                 end
-            catch
+            catch ex
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                 label='';
             end
             set(tool.handles.LabelText,'String',label)
@@ -2572,7 +2597,7 @@ classdef imtool3D < handle
                             currentCenters = tool.centers>range(1) & tool.centers<range(2);
                             if any(currentCenters)
                                 nelements=min(1,nelements./max(10,max(nelements(currentCenters))));
-                            end    
+                            end
                         else
                             nelements=min(1,nelements/max(nelements));
                         end
@@ -2595,10 +2620,10 @@ classdef imtool3D < handle
                 set(tool.handles.Slider,'SliderStep',[1/(size(tool.I{tool.Nvol},tool.viewplane)-1) 1/(size(tool.I{tool.Nvol},tool.viewplane)-1)])
                 fun=@(hobject,eventdata)showSlice(tool,[],hobject,eventdata);
                 set(tool.handles.Slider,'Callback',@(h,e) cellfun(@(x) feval(x,h,e), {@(h,e) set(tool.handles.Slider, 'Enable', 'off'),...
-                                                                   @(h,e) drawnow,...
-                                                                   @(h,e) set(tool.handles.Slider, 'Enable', 'on'),...
-                                                                   @(h,e) setRGBindex3(tool),...
-                                                                   fun}));
+                    @(h,e) drawnow,...
+                    @(h,e) set(tool.handles.Slider, 'Enable', 'on'),...
+                    @(h,e) setRGBindex3(tool),...
+                    fun}));
             end
             set(tool.handles.Slider,'min',1,'max',size(tool.I{tool.Nvol},tool.viewplane));
             if get(tool.handles.Slider,'value')==0 || get(tool.handles.Slider,'value')>n
@@ -2623,7 +2648,7 @@ classdef imtool3D < handle
                     case 'B'
                         tool.RGBindex(3) = currentslice;
                 end
-            end    
+            end
         end
         
         %% setupGrid
@@ -2632,7 +2657,12 @@ classdef imtool3D < handle
             try
                 delete(tool.handles.grid)
             catch ex
-                warning(ex);
+                switch(ex.identifier)
+                    case 'MATLAB:nonExistentField'
+                        % ignore
+                    otherwise
+                        rethrow(ex);
+                end
             end
             nGrid=5;
             nMinor=5;
@@ -2659,7 +2689,7 @@ classdef imtool3D < handle
             
             fun=@(hObject,eventdata) imageButtonDownFunction(hObject,eventdata,tool);
             set(tool.handles.grid,'ButtonDownFcn',fun,'Hittest','on')
-
+            
             if get(tool.handles.Tools.Grid,'Value')
                 set(tool.handles.grid,'Visible','on')
             else
@@ -2678,7 +2708,7 @@ classdef imtool3D < handle
                 set(tool.handles.Histrange(2),'XData',[L+W/2 L+W/2 L+W/2])
                 set(tool.handles.Histrange(3),'XData',[L L L])
             catch ex
-                warning(ex);
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
         
@@ -2746,7 +2776,7 @@ classdef imtool3D < handle
                         sprintf('%-12s%.2f\n','STD:',std_ii),...
                         sprintf('%-12s%i','Area:',area_ii) 'px'];
                     
-
+                    
                     set(tool.handles.Tools.maskSelected(max(1,min(5,ii))),'TooltipString',str)
                 end
                 
@@ -3140,7 +3170,7 @@ try
     set(hObject, 'Enable', 'on');
     warning on
 catch ex
-    warning(ex);
+    warning(ex.identifier, '%s', ex.message);
 end
 
 tool.montage = get(hObject,'Value');
@@ -3582,7 +3612,7 @@ try
     
     set(hh.Axes,'XLimMode','manual','YLimMode','manual');
 catch ex
-    warning(ex);
+    warning(ex.identifier, '%s', ex.message);
 end
 end
 
@@ -3750,7 +3780,16 @@ elseif h==4
     name = inputdlg('Enter variable name','',1,{'tool'});
     if isempty(name); return; end
     name=name{1};
-    assignin('base', name, tool)
+    try
+        assignin('base', name, tool)
+    catch ex
+        switch(ex.identifier)
+            case 'MATLAB:assigninInvalidVariable'
+                % ignore
+            otherwise
+                warning(ex.identifier, '%s', ex.message);
+        end
+    end
     set(hObject,'Value',1);
 end
 switch h
@@ -4051,7 +4090,8 @@ cols = ceil(nz/rows);
 try
     M = images.internal.createMontage(I, [size(I,1) size(I,2)],...
         [rows cols], [0 0], [], indices, []);
-catch
+catch ex
+    warning(ex.identifier, '%s', ex.message);
     Ipad = cat(3,I(:,:,indices),zeros(size(I,1),size(I,2),cols*rows-nz));
     M = squeeze(mat2cell(Ipad,size(I,1),size(I,2),ones(cols*rows,1)));
     M =cell2mat(reshape(M,[rows cols]));
@@ -4073,7 +4113,8 @@ if ~isdeployed
         fname = websave('imtool3D_github.zip', url); % 2014a
         unzip(fname, tmp); delete(fname);
         tdir = [tmp 'imtool3D_td-master/'];
-    catch
+    catch ex
+        warning(ex.identifier, '%s', ex.message);
         try
             fname = [tmp 'imtool3D_github.zip'];
             urlwrite(url, fname);
@@ -4223,4 +4264,15 @@ set(h,'position',[hpos(1)-hext2(1)/2,hpos(2)-hext2(2)/2,hext2(1),hext2(2)]);
 set(ha,'position',[30 30 hext(end-1:end)]);
 disp(char(txt));
 drawnow;
+end
+
+%% imtool3D
+function imtool3DHelpFcn()
+    helpdlg({'If this option is wrongly set, image will be rotated by 90 degree.', ...
+        'Horizontal orientation is usually used in Medical (first dimension is Left-Right)', ...
+        '', ...
+        'This preference can be reset in the Settings menu (<about> button).', ...
+        '', ...
+        ['Orientation can also be changed while viewing an image using the command: ', ...
+        'tool.setOrient(''vertical'')']});
 end

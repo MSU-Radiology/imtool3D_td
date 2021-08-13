@@ -385,7 +385,8 @@ if (n ==1) && strcmp(click,'normal')    %The user clicked on a line and wants to
     %get the point on the line to insert the new point
     try
         np = evnt.IntersectionPoint(1:2);
-    catch
+    catch ex
+        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
         np = op;
     end
     

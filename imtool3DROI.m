@@ -179,7 +179,7 @@ classdef imtool3DROI < handle
                 delete(ROI.listenerHandle);
                 notify(ROI,'ROIdeleted');
             catch ex
-                warning(ex);
+                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
     end

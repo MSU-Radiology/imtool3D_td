@@ -456,7 +456,7 @@ for ii=1:length(tool)
             
         end
     catch ex
-        warning(ex);
+        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
     end
 end
 end

@@ -58,7 +58,8 @@ else
     dat = squeeze(dat);
     try
         isLPI = strfind(uigetpref('imtool3D','rot90','Set orientation','How to display the first dimension of the matrix?',{'Vertically (Photo)','Horizontally (Medical)'},'CheckboxState',1,'HelpString','Help','HelpFcn','helpdlg({''If this option is wrongly set, image will be rotated by 90 degree.'', ''Horizontal orientation is usually used in Medical (first dimension is Left-Right)'', '''', ''This preference can be reset in the Settings menu (<about> button).'', '''', ''Orientation can also be changed while viewing an image using the command: tool.setOrient(''''vertical'''')''})'),'hor');
-    catch
+    catch ex
+        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
         isLPI = 1;
     end
     if isLPI
