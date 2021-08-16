@@ -284,40 +284,40 @@ classdef imtool3D < handle
     
     %% Private Properties
     properties (SetAccess = private, GetAccess = private)
-        I            %Image data (MxNxKxTxV) matrix of image data
-        Nvol         % Current volume
-        Ntime        % Current time
-        range        % Range of images
-        NvolOpts     % [Struct] with .Climits (color limits (Clim) for each Nvol to display images in I (cell))
-        %               .Opacity
-        %               .Cmap (color map per Nvol)
-        mask         %Indexed mask that can be overlaid on the image data
-        maskHistory  %History of mask  for undo
-        maskSelected %Index of the selected mask color
-        maskUpdated=1%Recompute stats in mask?
-        lockMask     %Lock other mask colors
-        maskColor    %Nx3 vector specifying the RGB color of the overlaid mask. Default is red (i.e., [1 0 0]);
-        handles      %Structured variable with all the handles
-        centers      %list of bin centers for histogram
-        alpha        %transparency of the overlaid mask (default is .2)
-        Orient       % [0,-90] vertical or horizontal
+        I                   % Image data (MxNxKxTxV) matrix of image data
+        Nvol                % Current volume
+        Ntime               % Current time
+        range               % Range of images
+        NvolOpts            % [Struct] with .Climits (color limits (Clim) for each Nvol to display images in I (cell))
+                            % .Opacity
+                            % .Cmap (color map per Nvol)
+        mask                % Indexed mask that can be overlaid on the image data
+        maskHistory         % History of mask  for undo
+        maskSelected        % Index of the selected mask color
+        maskUpdated = 1;    % Recompute stats in mask?
+        lockMask            % Lock other mask colors
+        maskColor           % Nx3 vector specifying the RGB color of the overlaid mask. Default is red (i.e., [1 0 0]);
+        handles             % Structured variable with all the handles
+        centers             % list of bin centers for histogram
+        alpha               % transparency of the overlaid mask (default is .2)
+        Orient              % [0,-90] vertical or horizontal
         aspectRatio = [1 1 1];
-        viewplane = 3;  % Direction of the 3rd dimension
-        optdlg       % option dialog object
+        viewplane = 3;      % Direction of the 3rd dimension
+        optdlg              % option dialog object
     end
     
     %% Public Properties
     properties
-        windowSpeed=2; %Ratio controls how fast the window and level change when you change them with the mouse
+        windowSpeed = 2;    %Ratio controls how fast the window and level change when you change them with the mouse
         upsample = false;
         upsampleMethod = 'lanczos3';    % Can be any of {'bilinear', 'bicubic', 'box', 'triangle', 'cubic', 'lanczos2', 
                                         % 'lanczos3'}
-        Visible = true; % lets the user hide the imtool3D panel
+        Visible = true;     % lets the user hide the imtool3D panel
         grid = false;
         montage = false;
-        brushsize = 5; % default size of the brush
+        brushsize = 5;      % default size of the brush
         gamma = 1;  % gamma correction
-        isRGB = false; % colored image?
+        isRGB = false;  % colored image?
         RGBindex = [1 2 3]; % R, G, and B bands index in case of color image
         RGBdim = 3; % [3, 4 or 5] dimension along which RGB planes are extracted
         RGBdecorrstretch = false;
@@ -328,7 +328,7 @@ classdef imtool3D < handle
     
     %% Dependent Properties
     properties (Dependent = true)
-        rescaleFactor %This is the screen pixels/image pixels. used to resample image data when being displayed
+        rescaleFactor   %This is the screen pixels/image pixels. used to resample image data when being displayed
     end
     
     %% Events
@@ -342,8 +342,8 @@ classdef imtool3D < handle
     
     %% Public Class Methods
     methods
-        function tool = imtool3D(varargin)  %Constructor
-            
+        %% Constructor
+        function tool = imtool3D(varargin)
             % Parse Inputs
             [I, position, h, ~, tools, ~, enableHist] = parseinputs(varargin{:});
             
@@ -359,29 +359,29 @@ classdef imtool3D < handle
                 warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
                 Orient = 'vertical';
             end
-            if isempty(h)
-                
-                h=figure;
-                set(h,'Toolbar','none','Menubar','none','NextPlot','new')
-                set(h,'Units','Pixels');
-                pos=get(h,'Position');
-                Af=pos(3)/pos(4);   %input Ratio of the figure
-                if iscell(I)
-                    S = [size(I{1},1) size(I{1},2) size(I{1},3)];
+            
+            if(isempty(h))
+                h = figure;
+                set(h, 'Toolbar', 'none', 'Menubar', 'none', 'NextPlot', 'new');
+                set(h, 'Units', 'Pixels');
+                pos = get(h, 'Position');
+                Af = pos(3)/pos(4);   %input Ratio of the figure
+                if(iscell(I))
+                    S = [size(I{1}, 1) size(I{1}, 2) size(I{1}, 3)];
                 else
-                    S = [size(I,1) size(I,2) size(I,3)];
+                    S = [size(I, 1) size(I, 2) size(I, 3)];
                 end
                 
-                if strfind(lower(Orient),'vertical')
-                    AI=S(2)/S(1); %input Ratio of the image
+                if(contains(lower(Orient), 'vertical'))
+                    AI = S(2)/S(1); %input Ratio of the image
                 else
-                    AI=S(1)/S(2); %input Ratio of the image
+                    AI = S(1)/S(2); %input Ratio of the image
                 end
                 
-                if Af>AI    %Figure is too wide, make it taller to match
-                    pos(4)=pos(3)/AI;
-                elseif Af<AI    %Figure is too long, make it wider to match
-                    pos(3)=AI*pos(4);
+                if(Af>AI)    %Figure is too wide, make it taller to match
+                    pos(4) = pos(3)/AI;
+                elseif(Af<AI)    %Figure is too long, make it wider to match
+                    pos(3) = AI*pos(4);
                 end
                 
                 %set minimal size
@@ -389,68 +389,81 @@ classdef imtool3D < handle
                     %https://undocumentedmatlab.com/articles/working-with-non-standard-dpi-displays
                     ScreenSizeW = java.awt.Toolkit.getDefaultToolkit.getScreenSize.getWidth;
                     ScreenSizeH = java.awt.Toolkit.getDefaultToolkit.getScreenSize.getHeight;
-                    screensize=[0 0 ScreenSizeW ScreenSizeH];
+                    screensize = [0 0 ScreenSizeW ScreenSizeH];
                 catch ex
                     warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
-                    screensize = get(0,'ScreenSize');
+                    screensize = get(0, 'ScreenSize');
                 end
-                pos(3)=min(max(700,pos(3)),screensize(3)*.9);
-                pos(4)=min(max(500,pos(4)),screensize(4)*.9);
+                pos(3) = min(max(700, pos(3)), screensize(3)*0.9);
+                pos(4) = min(max(500, pos(4)), screensize(4)*0.9);
                 
                 %make sure the figure is centered
                 pos(1) = ceil((screensize(3)-pos(3))/2);
                 pos(2) = ceil((screensize(4)-pos(4))/2);
-                set(h,'Position',pos)
-                set(h,'Units','normalized');
+                set(h, 'Position', pos);
+                set(h, 'Units', 'normalized');
             end
             
             %find the parent figure handle if the given parent is not a
             %figure
-            if ~strcmp(get(h,'type'),'figure')
+            if(~strcmp(get(h, 'type'), 'figure'))
                 fig = getParentFigure(h);
             else
                 fig = h;
             end
             
-            if ~exist('overview_zoom_in.png','file')
+            if(~exist('overview_zoom_in.png', 'file'))
                 repopath = fileparts(mfilename('fullpath'));
-                addpath(genpath(fullfile(repopath,'src')))
-                addpath(genpath(fullfile(repopath,'External')));
+                addpath(genpath(fullfile(repopath, 'src')))
+                addpath(genpath(fullfile(repopath, 'External')));
             end
             %--------------------------------------------------------------
             tool.lockMask = true;
-            tool.handles.fig=fig;
+            tool.handles.fig = fig;
             tool.handles.parent = h;
-            tool.maskColor = [  0     0     0;
+            tool.maskColor = ...
+                [0     0     0;
                 1     0     0;
                 1     1     0;
                 0     1     0;
                 0     1     1;
                 0     0     1;
                 1     0     1];
-            tool.maskColor = cat(1,tool.maskColor,colorcube(30));
-            tool.maskColor(end-5:end,:) = [];
-            tool.maskColor(end+1,:)     = [0.8500    0.3250    0.0980];
+            tool.maskColor = cat(1, tool.maskColor, colorcube(30));
+            tool.maskColor(end-5:end, :) = [];
+            tool.maskColor(end+1, :) = [0.8500    0.3250    0.0980];
             tool.maskSelected = 1;
-            tool.maskHistory  = cell(1,10);
-            tool.alpha = .2;
+            tool.maskHistory = cell(1, 10);
+            tool.alpha = 0.2;
             tool.Nvol = 1;
             tool.Ntime = 1;
             
             %Create the panels and slider
-            w=30; %Pixel width of the side panels
-            h=110; %Pixel height of the histogram panel
-            wbutt=20; %Pixel size of the buttons
-            tool.handles.Panels.Large   =   uipanel(tool.handles.parent,'Units','normalized','Position',position,'Title','','Tag','imtool3D');
-            pos=getpixelposition(tool.handles.parent); pos(1) = pos(1)+position(1)*pos(3); pos(2) = pos(2)+position(2)*pos(4); pos(3) = pos(3)*position(3); pos(4) = pos(4)*position(4);
-            tool.handles.Panels.Hist   =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[w pos(4)-w-h pos(3)-2*w h],'Title','');
-            tool.handles.Panels.Image   =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[w w pos(3)-2*w pos(4)-2*w],'Title','');
-            tool.handles.Panels.Tools   =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[0 pos(4)-w pos(3) w],'Title','');
-            tool.handles.Panels.ROItools    =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[pos(3)-w  w w pos(4)-2*w],'Title','');
-            tool.handles.Panels.Slider  =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[0 w w pos(4)-2*w],'Title','');
-            tool.handles.Panels.Info   =   uipanel(tool.handles.Panels.Large,'Units','Pixels','Position',[0 0 pos(3) w],'Title','');
+            w = 30;   %Pixel width of the side panels
+            h = 110;  %Pixel height of the histogram panel
+            wbutt = 20;   %Pixel size of the buttons
+            tool.handles.Panels.Large = uipanel(tool.handles.parent, 'Units', 'normalized', 'Position', position, ...
+                'Title', '', 'Tag', 'imtool3D');
+            pos=getpixelposition(tool.handles.parent);
+            pos(1) = pos(1)+position(1)*pos(3);
+            pos(2) = pos(2)+position(2)*pos(4);
+            pos(3) = pos(3)*position(3);
+            pos(4) = pos(4)*position(4);
+            tool.handles.Panels.Hist = uipanel(tool.handles.Panels.Large, 'Units', 'Pixels', ...
+                'Position', [w pos(4)-w-h pos(3)-2*w h], 'Title', '');
+            tool.handles.Panels.Image = uipanel(tool.handles.Panels.Large, 'Units', 'Pixels', ...
+                'Position', [w w pos(3)-2*w pos(4)-2*w], 'Title', '');
+            tool.handles.Panels.Tools = uipanel(tool.handles.Panels.Large, 'Units', 'Pixels', ...
+                'Position', [0 pos(4)-w pos(3) w], 'Title', '');
+            tool.handles.Panels.ROItools = uipanel(tool.handles.Panels.Large, 'Units', 'Pixels', ...
+                'Position', [pos(3)-w  w w pos(4)-2*w], 'Title', '');
+            tool.handles.Panels.Slider = uipanel(tool.handles.Panels.Large, 'Units', 'Pixels', ...
+                'Position', [0 w w pos(4)-2*w], 'Title', '');
+            tool.handles.Panels.Info = uipanel(tool.handles.Panels.Large, 'Units', 'Pixels', ...
+                'Position', [0 0 pos(3) w], 'Title', '');
             try
-                set(cell2mat(struct2cell(tool.handles.Panels)),'BackgroundColor','k','ForegroundColor','w','HighlightColor','k')
+                set(cell2mat(struct2cell(tool.handles.Panels)), 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
+                    'HighlightColor', 'k')
             catch ex
                 switch(ex.identifier)
                     case 'MATLAB:cell2mat:UnsupportedCellContent'
@@ -460,69 +473,86 @@ classdef imtool3D < handle
                 end
                 objarr=struct2cell(tool.handles.Panels);
                 objarr=[objarr{:}];
-                set(objarr,'BackgroundColor','k','ForegroundColor','w','HighlightColor','k');
+                set(objarr, 'BackgroundColor', 'k', 'ForegroundColor', 'w', 'HighlightColor', 'k');
             end
             
             %Create Color Channel Picker below slider for rgb images
-            butString = {'.','R','G','B'};
-            tool.handles.SliderColor = uicontrol(tool.handles.Panels.Slider,'Style','pushbutton','String',butString{1},'Position',[max(0,w-wbutt) 0 wbutt wbutt],'TooltipString',sprintf('Color channel used by slider:\n.  channels are split\nR  slider control red\nG  slider control green\nB  slider control Blue'));
-            fun=@(src,evnt)SelectSliderColor(tool);
+            butString = {'.', 'R', 'G', 'B'};
+            tool.handles.SliderColor = uicontrol(tool.handles.Panels.Slider, 'Style', 'pushbutton', ...
+                'String', butString{1}, 'Position', [max(0,w-wbutt) 0 wbutt wbutt], ...
+                'TooltipString', sprintf(['Color channel used by slider:\n.  channels are split\nR  ', ...
+                    'slider control red\nG  slider control green\nB  slider control Blue']));
+            fun=@(src, evnt) SelectSliderColor(tool);
             c = uicontextmenu(tool.handles.fig);
-            set(tool.handles.SliderColor,'Callback',fun,'UIContextMenu',c)
-            tool.handles.uimenu.RGB(1) = uimenu('Parent',c,'Label','switch to RGB/Monochrome','Callback',@(src,evnt) assignval(tool,'isRGB',~tool.isRGB));
-            tool.handles.uimenu.RGB(2) = uimenu('Parent',c,'Label','RGB dimension');
-            tool.handles.uimenu.RGB(3) = uimenu('Parent',tool.handles.uimenu.RGB(2) ,'Label','slice (3rd)','Callback',@(src,evnt) assignval(tool,'RGBdim',3),'Checked','on');
-            tool.handles.uimenu.RGB(4) = uimenu('Parent',tool.handles.uimenu.RGB(2),'Label','time (4th)','Callback',@(src,evnt) assignval(tool,'RGBdim',4));
-            tool.handles.uimenu.RGB(5) = uimenu('Parent',tool.handles.uimenu.RGB(2),'Label','volume (5th)','Callback',@(src,evnt) assignval(tool,'RGBdim',5));
-            tool.handles.uimenu.RGB(6) = uimenu('Parent',c,'Label','RGB index','Callback',@(src,evnt) dlgsetRGBindex(tool));
-            tool.handles.uimenu.RGB(7) = uimenu('Parent',c,'Label','align RGB bands','Callback',@(src,evnt) assignval(tool,'RGBalignhisto',~tool.RGBalignhisto));
+            set(tool.handles.SliderColor, 'Callback', fun, 'UIContextMenu', c);
+            tool.handles.uimenu.RGB(1) = uimenu('Parent', c, 'Label', 'switch to RGB/Monochrome', ...
+                'Callback', @(src, evnt) assignval(tool, 'isRGB', ~tool.isRGB));
+            tool.handles.uimenu.RGB(2) = uimenu('Parent', c, 'Label', 'RGB dimension');
+            tool.handles.uimenu.RGB(3) = uimenu('Parent', tool.handles.uimenu.RGB(2), 'Label', 'slice (3rd)', ...
+                'Callback', @(src, evnt) assignval(tool, 'RGBdim', 3), 'Checked', 'on');
+            tool.handles.uimenu.RGB(4) = uimenu('Parent', tool.handles.uimenu.RGB(2), 'Label', 'time (4th)', ...
+                'Callback', @(src, evnt) assignval(tool, 'RGBdim', 4));
+            tool.handles.uimenu.RGB(5) = uimenu('Parent', tool.handles.uimenu.RGB(2), 'Label', 'volume (5th)', ...
+                'Callback', @(src, evnt) assignval(tool, 'RGBdim', 5));
+            tool.handles.uimenu.RGB(6) = uimenu('Parent', c, 'Label', 'RGB index', ...
+                'Callback', @(src, evnt) dlgsetRGBindex(tool));
+            tool.handles.uimenu.RGB(7) = uimenu('Parent', c, 'Label', 'align RGB bands', ...
+                'Callback', @(src, evnt) assignval(tool, 'RGBalignhisto', ~tool.RGBalignhisto));
             
             %Create Slider for scrolling through image stack
-            tool.handles.Slider         =   uicontrol(tool.handles.Panels.Slider,'Style','Slider','Position',[0 wbutt w pos(4)-2*w-wbutt],'TooltipString','Change Slice (can use scroll wheel also)');
-            scrollfun = getpref('imtool3D','ScrollWheelFcn','slice');
-            tool.setScrollWheelFun(scrollfun,0,tools);
+            tool.handles.Slider = uicontrol(tool.handles.Panels.Slider, 'Style', 'Slider', ...
+                'Position', [0 wbutt w pos(4)-2*w-wbutt], 'TooltipString', 'Change Slice (can use scroll wheel also)');
+            scrollfun = getpref('imtool3D', 'ScrollWheelFcn', 'slice');
+            tool.setScrollWheelFun(scrollfun, 0, tools);
             
             %Create image axis
-            tool.handles.Axes           =   axes('Position',[0 0 1 1],'Parent',tool.handles.Panels.Image,'Color','none');
-            tool.handles.I              =   imshow(zeros(3,3),[0 1],'Parent',tool.handles.Axes); hold on;
-            set(tool.handles.I,'Clipping','off')
+            tool.handles.Axes = axes('Position', [0 0 1 1], 'Parent', tool.handles.Panels.Image, 'Color', 'none');
+            tool.handles.I = imshow(zeros(3,3), [0 1], 'Parent',tool.handles.Axes);
+            hold on;
+            set(tool.handles.I, 'Clipping', 'off')
             tool.setOrient(Orient)
-            set(tool.handles.Axes,'XLimMode','manual','YLimMode','manual','Clipping','off');
+            set(tool.handles.Axes, 'XLimMode', 'manual', 'YLimMode', 'manual', 'Clipping', 'off');
             
             
             %Set up the binary mask viewer
-            im = ind2rgb(zeros(3,3),tool.maskColor);
-            tool.handles.mask           =   imshow(im);
-            set(tool.handles.Axes,'Position',[0 0 1 1],'Color','none','XColor','r','YColor','r','GridLineStyle','--','LineWidth',1.5,'XTickLabel','','YTickLabel','');
-            axis off
-            grid off
-            axis fill
+            im = ind2rgb(zeros(3,3), tool.maskColor);
+            tool.handles.mask = imshow(im);
+            set(tool.handles.Axes, 'Position', [0 0 1 1], 'Color', 'none', 'XColor', 'r', 'YColor', 'r', ...
+                'GridLineStyle', '--', 'LineWidth', 1.5, 'XTickLabel', '', 'YTickLabel', '');
+            axis off;
+            grid off;
+            axis fill;
             
             %Set up image info display
-            tool.handles.Info=uicontrol(tool.handles.Panels.Info,'Style','text','String','(x,y) val','Units','Normalized','Position',[0 .1 .5 .8],'BackgroundColor','k','ForegroundColor','w','FontSize',12,'HorizontalAlignment','Left');
-            fun=@(src,evnt)getImageInfo(src,evnt,tool);
-            set(tool.handles.fig,'WindowButtonMotionFcn',fun);
-            %tool.handles.LabelText=uicontrol(tool.handles.Panels.Info,'Style','text','Units','Normalized','Position',[.25 .1 .3 .8],'BackgroundColor','k','ForegroundColor','w','FontSize',12,'HorizontalAlignment','Center');
-            tool.handles.LabelText=annotation(tool.handles.Panels.Image,'textbox','EdgeColor','none','String','','Position',[0 0 1 0.05],'Color',[1 1 1],'Interpreter','none');
+            tool.handles.Info = uicontrol(tool.handles.Panels.Info, 'Style', 'text', 'String', '(x,y) val', ...
+                'Units', 'Normalized', 'Position', [0 0.1 0.5 0.8], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
+                'FontSize', 12, 'HorizontalAlignment', 'Left');
+            fun=@(src,evnt)getImageInfo(src, evnt, tool);
+            set(tool.handles.fig, 'WindowButtonMotionFcn', fun);
+            tool.handles.LabelText=annotation(tool.handles.Panels.Image, 'textbox', 'EdgeColor', 'none', ...
+                'String', '', 'Position', [0 0 1 0.05], 'Color', [1 1 1], 'Interpreter', 'none');
             c = uicontextmenu(tool.handles.fig);
-            tool.handles.SliceText=uicontrol(tool.handles.Panels.Info,'Style','text','UIContextMenu',c,'String','','Units','Normalized','Position',[.5 .1 .43 .8],'BackgroundColor','k','ForegroundColor','w','FontSize',12,'HorizontalAlignment','Right', 'TooltipString', 'Use arrows to navigate through time (4th dim) and volumes (5th dim)');
-            uimenu('Parent',c,'Label','100%','Callback',@(s,h) assignval(tool, 'rescaleFactor',1))
-            uimenu('Parent',c,'Label','10%','Callback',@(s,h) assignval(tool, 'rescaleFactor',.1))
-            uimenu('Parent',c,'Label','50%','Callback',@(s,h) assignval(tool, 'rescaleFactor',.5))
-            uimenu('Parent',c,'Label','200%','Callback',@(s,h) assignval(tool, 'rescaleFactor',2))
-            uimenu('Parent',c,'Label','400%','Callback',@(s,h) assignval(tool, 'rescaleFactor',4))
+            tool.handles.SliceText = uicontrol(tool.handles.Panels.Info, 'Style', 'text', 'UIContextMenu', c, ...
+                'String', '', 'Units', 'Normalized', 'Position', [0.5 0.1 0.43 0.8], 'BackgroundColor', 'k', ...
+                'ForegroundColor', 'w', 'FontSize', 12, 'HorizontalAlignment', 'Right', ...
+                'TooltipString', 'Use arrows to navigate through time (4th dim) and volumes (5th dim)');
+            uimenu('Parent', c, 'Label', '100%', 'Callback', @(s, h) assignval(tool, 'rescaleFactor', 1));
+            uimenu('Parent', c, 'Label', '10%', 'Callback', @(s, h) assignval(tool, 'rescaleFactor', 0.1));
+            uimenu('Parent', c, 'Label', '50%', 'Callback', @(s, h) assignval(tool, 'rescaleFactor', 0.5));
+            uimenu('Parent', c, 'Label', '200%', 'Callback', @(s, h) assignval(tool, 'rescaleFactor', 2));
+            uimenu('Parent', c, 'Label', '400%', 'Callback', @(s, h) assignval(tool, 'rescaleFactor', 4));
             
             % Help Annotation when cursor hover Help Button
             tool.handles.HelpAnnotation = [];
             %Set up mouse button controls
-            fun=@(hObject,eventdata) imageButtonDownFunction(hObject,eventdata,tool);
-            set(tool.handles.mask,'ButtonDownFcn',fun)
-            set(tool.handles.I,'ButtonDownFcn',fun)
+            fun = @(hObject, eventdata) imageButtonDownFunction(hObject, eventdata, tool);
+            set(tool.handles.mask, 'ButtonDownFcn', fun);
+            set(tool.handles.I, 'ButtonDownFcn', fun);
             
             %create the tool buttons
-            wp=w;
-            w=wbutt;
-            buff=(wp-w)/2;
+            wp = w;
+            w = wbutt;
+            buff = (wp-w)/2;
             
             % The commented-out variable assignments are unused. If this
             % is work-in-progress code and MATLABdir will ultimately be
@@ -543,217 +573,271 @@ classdef imtool3D < handle
             
             %Create the histogram plot
             %set(tool.handles.Panels.Image,'Visible','off')
-            if enableHist
-                tool.handles.HistAxes           =   axes('Position',[.025 .15 .95 .55],'Parent',tool.handles.Panels.Hist);
-                hold(tool.handles.HistAxes,'on')
-                tool.handles.HistLine=[plot([0 1],[0 1],'-w','LineWidth',1);...
-                    plot([0 1],[0 1],'-g','LineWidth',1);...
-                    plot([0 1],[0 1],'-b','LineWidth',1)];
-                hold(tool.handles.HistAxes,'off');
-                set(tool.handles.HistAxes,'Color','none','XColor','w','YColor','w','FontSize',9,'YTick',[])
-                axis on
-                hold on
-                axis fill
-                xlim(get(gca,'Xlim'))
-                tool.handles.Histrange(1)=plot([0 0 0],[0 .5 1],'.-r');
-                tool.handles.Histrange(2)=plot([1 1 1],[0 .5 1],'.-r');
-                tool.handles.Histrange(3)=plot([0.5 0.5 0.5],[0 .5 1],'.--r');
-                tool.handles.HistImageAxes           =   axes('Position',[.025 .75 .95 .2],'Parent',tool.handles.Panels.Hist);
-                set(tool.handles.HistImageAxes,'Units','Pixels'); pos=get(tool.handles.HistImageAxes,'Position'); set(tool.handles.HistImageAxes,'Units','Normalized');
-                tool.handles.HistImage=imshow(repmat(linspace(0,1,256),[round(pos(4)) 1]),[0 1]);
-                set(tool.handles.HistImageAxes,'XColor','w','YColor','w','XTick',[],'YTick',[])
+            if(enableHist)
+                tool.handles.HistAxes = axes('Position', [0.025 0.15 0.95 0.55], 'Parent', tool.handles.Panels.Hist);
+                hold(tool.handles.HistAxes, 'on');
+                tool.handles.HistLine = [plot([0 1], [0 1], '-w', 'LineWidth', 1); ...
+                    plot([0 1], [0 1], '-g', 'LineWidth', 1); ...
+                    plot([0 1], [0 1], '-b', 'LineWidth', 1)];
+                hold(tool.handles.HistAxes, 'off');
+                set(tool.handles.HistAxes, 'Color', 'none', 'XColor', 'w', 'YColor', 'w', 'FontSize', 9, 'YTick', []);
+                axis on;
+                hold on;
+                axis fill;
+                xlim(get(gca, 'Xlim'))
+                tool.handles.Histrange(1) = plot([0 0 0], [0 0.5 1], '.-r');
+                tool.handles.Histrange(2) = plot([1 1 1],[0 0.5 1], '.-r');
+                tool.handles.Histrange(3) = plot([0.5 0.5 0.5], [0 0.5 1], '.--r');
+                tool.handles.HistImageAxes = axes('Position', [0.025 0.75 0.95 0.2], ...
+                    'Parent', tool.handles.Panels.Hist);
+                set(tool.handles.HistImageAxes, 'Units', 'Pixels');
+                pos = get(tool.handles.HistImageAxes, 'Position');
+                set(tool.handles.HistImageAxes, 'Units', 'Normalized');
+                tool.handles.HistImage = imshow(repmat(linspace(0, 1, 256), [round(pos(4)) 1]), [0 1]);
+                set(tool.handles.HistImageAxes, 'XColor', 'w', 'YColor', 'w', 'XTick', [], 'YTick', []);
                 axis on;
                 box on;
-                axis normal
-                fun = @(hObject,evnt)histogramButtonDownFunction(hObject,evnt,tool,1);
-                set(tool.handles.Histrange(1),'ButtonDownFcn',fun);
-                fun = @(hObject,evnt)histogramButtonDownFunction(hObject,evnt,tool,2);
-                set(tool.handles.Histrange(2),'ButtonDownFcn',fun);
-                fun = @(hObject,evnt)histogramButtonDownFunction(hObject,evnt,tool,3);
-                set(tool.handles.Histrange(3),'ButtonDownFcn',fun);
+                axis normal;
+                fun = @(hObject, evnt) histogramButtonDownFunction(hObject, evnt, tool, 1);
+                set(tool.handles.Histrange(1), 'ButtonDownFcn', fun);
+                fun = @(hObject, evnt) histogramButtonDownFunction(hObject, evnt, tool, 2);
+                set(tool.handles.Histrange(2), 'ButtonDownFcn', fun);
+                fun = @(hObject, evnt) histogramButtonDownFunction(hObject, evnt, tool, 3);
+                set(tool.handles.Histrange(3), 'ButtonDownFcn', fun);
                 
                 %Create histogram checkbox
-                tool.handles.Tools.Hist     =   uicontrol(tool.handles.Panels.Tools,'Style','ToggleButton','String','','Position',[buff buff w w],'TooltipString','Show Colorbar and histogram of current slice');
+                tool.handles.Tools.Hist = uicontrol(tool.handles.Panels.Tools, 'Style', 'ToggleButton', ...
+                    'String', '', 'Position', [buff buff w w], ...
+                    'TooltipString', 'Show Colorbar and histogram of current slice');
                 MATLABicondir = fullfile(toolboxdir('matlab'), 'icons');
-                icon_colorbar = makeToolbarIconFromPNG(fullfile(MATLABicondir,'tool_colorbar.png'));
-                set(tool.handles.Tools.Hist,'CData',icon_colorbar)
-                fun=@(hObject,evnt) ShowHistogram(hObject,evnt,tool,wp,h);
-                set(tool.handles.Tools.Hist,'Callback',fun)
-                lp=buff+w;
+                icon_colorbar = makeToolbarIconFromPNG(fullfile(MATLABicondir, 'tool_colorbar.png'));
+                set(tool.handles.Tools.Hist, 'CData', icon_colorbar);
+                fun = @(hObject, evnt) ShowHistogram(hObject, evnt, tool, wp, h);
+                set(tool.handles.Tools.Hist, 'Callback', fun)
+                lp = buff+w;
             else
-                lp=buff;
+                lp = buff;
             end
             
             %Set up the resize function
-            fun=@(x,y) panelResizeFunction(x,y,tool,wp,h,wbutt);
-            set(tool.handles.Panels.Large,'ResizeFcn',fun)
+            fun = @(x, y) panelResizeFunction(x, y, tool, wp, h, wbutt);
+            set(tool.handles.Panels.Large, 'ResizeFcn', fun);
             
             %% TOOLBAR ON TOP
             %Create window and level boxes
-            tool.handles.Tools.TL       =   uicontrol(tool.handles.Panels.Tools,'Style','text','String','L','Position',[lp+buff buff w w],'BackgroundColor','k','ForegroundColor','w','TooltipString',sprintf('Intensity Window Lower Bound\nRight Click to set current window to all volumes\n(left click and drag on the image to control window width and level)'));
-            tool.handles.Tools.L        =   uicontrol(tool.handles.Panels.Tools,'Style','Edit','String','0','Position',[lp+buff+w buff 2*w w],'TooltipString',sprintf('Intensity Window Lower Bound\nRight Click to set current window to all volumes\n(left click and drag on the image to control window width and level)'),'BackgroundColor',[.2 .2 .2],'ForegroundColor','w');
-            tool.handles.Tools.TU       =   uicontrol(tool.handles.Panels.Tools,'Style','text','String','U','Position',[lp+2*buff+3*w buff w w],'BackgroundColor','k','ForegroundColor','w','TooltipString',sprintf('Intensity Window Upper Bound\nRight Click to set current window to all volumes\n(left click and drag on the image to control window width and level)'));
-            tool.handles.Tools.U        =   uicontrol(tool.handles.Panels.Tools,'Style','Edit','String','1','Position',[lp+2*buff+4*w buff 2*w w],'TooltipString',sprintf('Intensity Window Upper Bound\nRight Click to set current window to all volumes\n(left click and drag on the image to control window width and level)'),'BackgroundColor',[.2 .2 .2],'ForegroundColor','w');
-            tool.handles.Tools.TO       =   uicontrol(tool.handles.Panels.Tools,'Style','text','String','O','Position',[lp+2*buff+6*w buff w w],'BackgroundColor','k','ForegroundColor','w','TooltipString',sprintf('Opacity'));
-            tool.handles.Tools.O        =   uicontrol(tool.handles.Panels.Tools,'Style','Edit','String','1','Position',[lp+2*buff+7*w buff w w],'TooltipString',sprintf('Opacity'),'BackgroundColor',[.2 .2 .2],'ForegroundColor','w');
-            tool.handles.Tools.SO       =   uicontrol(tool.handles.Panels.Tools,'Style','Slider','Position',[lp+2*buff+8*w buff w/2 w],'TooltipString',sprintf('Opacity'),'Min',0,'Max',1,'Value',1,'SliderStep',[.1 .1]);
+            tool.handles.Tools.TL = uicontrol(tool.handles.Panels.Tools, 'Style', 'text', 'String', 'L', ...
+                'Position', [lp+buff buff w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
+                'TooltipString', sprintf(['Intensity Window Lower Bound\nRight Click to set current window to ', ...
+                    'all volumes\n(left click and drag on the image to control window width and level)']));
+            tool.handles.Tools.L = uicontrol(tool.handles.Panels.Tools, 'Style', 'Edit', 'String', '0', ...
+                'Position', [lp+buff+w buff 2*w w], ...
+                'TooltipString', sprintf(['Intensity Window Lower Bound\nRight Click to set current window to ', ...
+                    'all volumes\n(left click and drag on the image to control window width and level)']), ...
+                    'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
+            tool.handles.Tools.TU = uicontrol(tool.handles.Panels.Tools, 'Style', 'text', 'String', 'U', ...
+                'Position', [lp+2*buff+3*w buff w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
+                'TooltipString', sprintf(['Intensity Window Upper Bound\nRight Click to set current window to ', ...
+                    'all volumes\n(left click and drag on the image to control window width and level)']));
+            tool.handles.Tools.U = uicontrol(tool.handles.Panels.Tools, 'Style', 'Edit', 'String', '1', ...
+                'Position', [lp+2*buff+4*w buff 2*w w], ...
+                'TooltipString', sprintf(['Intensity Window Upper Bound\nRight Click to set current window to ', ...
+                    'all volumes\n(left click and drag on the image to control window width and level)']), ...
+                    'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
+            tool.handles.Tools.TO = uicontrol(tool.handles.Panels.Tools, 'Style', 'text', 'String', 'O', ...
+                'Position', [lp+2*buff+6*w buff w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
+                'TooltipString', sprintf('Opacity'));
+            tool.handles.Tools.O = uicontrol(tool.handles.Panels.Tools, 'Style', 'Edit', 'String', '1', ...
+                'Position', [lp+2*buff+7*w buff w w], 'TooltipString', sprintf('Opacity'), ...
+                'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
+            tool.handles.Tools.SO = uicontrol(tool.handles.Panels.Tools, 'Style', 'Slider', ...
+                'Position', [lp+2*buff+8*w buff w/2 w], 'TooltipString', sprintf('Opacity'), 'Min', 0, 'Max', 1, ...
+                'Value', 1, 'SliderStep', [0.1 0.1]);
             
-            lp=lp+3*buff+8.5*w;
+            lp = lp+3*buff+8.5*w;
             
             %Creat window and level callbacks
-            fun=@(hobject,evnt) WindowLevel_callback(hobject,evnt,tool);
-            funSameWL = @(src,evnt) tool.setClimits(repmat({get(tool.handles.Axes(tool.Nvol),'Clim')},[1 length(tool.I)]));
-            funAutoRange = @(src,evnt) tool.setClimits(double(range_outlier(tool.I{tool.Nvol}(:),5)));
+            fun = @(hobject, evnt) WindowLevel_callback(hobject, evnt, tool);
+            funSameWL = @(src, evnt) tool.setClimits(repmat({get(tool.handles.Axes(tool.Nvol), 'Clim')}, ...
+                [1 length(tool.I)]));
+            funAutoRange = @(src, evnt) tool.setClimits(double(range_outlier(tool.I{tool.Nvol}(:), 5)));
             c = uicontextmenu(tool.handles.fig);
-            set(tool.handles.Tools.L,'Callback',fun,'UIContextMenu',c); % right click set the same range for all volumes
-            set(tool.handles.Tools.U,'Callback',fun,'UIContextMenu',c);
-            uimenu('Parent',c,'Label','Auto window level','Callback',funAutoRange)
-            uimenu('Parent',c,'Label','Same window level for all volumes','Callback',funSameWL)
+            % right click set the same range for all volumes
+            set(tool.handles.Tools.L, 'Callback', fun, 'UIContextMenu', c);
+            set(tool.handles.Tools.U, 'Callback', fun, 'UIContextMenu', c);
+            uimenu('Parent', c, 'Label', 'Auto window level', 'Callback', funAutoRange);
+            uimenu('Parent', c, 'Label', 'Same window level for all volumes', 'Callback', funSameWL);
             
-            fun=@(hobject,evnt) setOpacity(tool,[], hobject);
-            set(tool.handles.Tools.O,'Callback',fun);
-            set(tool.handles.Tools.SO,'Callback',fun);
+            fun = @(hobject, evnt) setOpacity(tool, [], hobject);
+            set(tool.handles.Tools.O, 'Callback', fun);
+            set(tool.handles.Tools.SO, 'Callback', fun);
             
             %Create view restore button
-            tool.handles.Tools.ViewRestore           =   uicontrol(tool.handles.Panels.Tools,'Style','pushbutton','String','','Position',[lp buff w w],'TooltipString',sprintf('Reset Pan and Zoom\n(Right Click (Ctrl+Click) to Pan and Middle (Shift+Click) Click to zoom)'));
+            tool.handles.Tools.ViewRestore = uicontrol(tool.handles.Panels.Tools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [lp buff w w], ...
+                'TooltipString', sprintf(['Reset Pan and Zoom\n(Right Click (Ctrl+Click) to Pan and Middle ', ...
+                    '(Shift+Click) Click to zoom)']));
             icon_save = makeToolbarIconFromPNG('overview_zoom_in.png');
-            set(tool.handles.Tools.ViewRestore,'CData',icon_save);
-            fun=@(hobject,evnt) resetViewCallback(hobject,evnt,tool);
-            set(tool.handles.Tools.ViewRestore,'Callback',fun)
-            lp=lp+w+2*buff;
+            set(tool.handles.Tools.ViewRestore, 'CData', icon_save);
+            fun = @(hobject, evnt) resetViewCallback(hobject, evnt, tool);
+            set(tool.handles.Tools.ViewRestore, 'Callback', fun)
+            lp = lp+w+2*buff;
             
             %Create grid checkbox
-            tool.handles.Tools.Grid           =   uicontrol(tool.handles.Panels.Tools,'Style','checkbox','String','Grid?','Position',[lp buff 2.5*w w],'BackgroundColor','k','ForegroundColor','w');
-            fun=@(hObject,evnt) toggleGrid(hObject,evnt,tool);
-            set(tool.handles.Tools.Grid,'Callback',fun)
-            set(tool.handles.Tools.Grid,'TooltipString','Toggle Gridlines')
-            lp=lp+2.5*w;
+            tool.handles.Tools.Grid = uicontrol(tool.handles.Panels.Tools, 'Style', 'checkbox', 'String', 'Grid?', ...
+                'Position', [lp buff 2.5*w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w');
+            fun = @(hObject, evnt) toggleGrid(hObject, evnt, tool);
+            set(tool.handles.Tools.Grid, 'Callback', fun);
+            set(tool.handles.Tools.Grid, 'TooltipString', 'Toggle Gridlines');
+            lp = lp+2.5*w;
             
             %Create the mask view switch
-            tool.handles.Tools.Mask           =   uicontrol(tool.handles.Panels.Tools,'Style','checkbox','String','Mask?','Position',[lp buff 3*w w],'BackgroundColor','k','ForegroundColor','w','TooltipString','Toggle Binary Mask (spacebar)','Value',1);
-            fun=@(hObject,evnt) toggleMask(hObject,evnt,tool);
-            set(tool.handles.Tools.Mask,'Callback',fun)
-            lp=lp+3*w;
+            tool.handles.Tools.Mask = uicontrol(tool.handles.Panels.Tools, 'Style', 'checkbox', 'String', 'Mask?', ...
+                'Position', [lp buff 3*w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
+                'TooltipString', 'Toggle Binary Mask (spacebar)', 'Value', 1);
+            fun = @(hObject, evnt) toggleMask(hObject, evnt, tool);
+            set(tool.handles.Tools.Mask, 'Callback', fun)
+            lp = lp+3*w;
             
             %Create colormap pulldown menu
-            mapNames={'Gray','Parula','Jet','HSV','Hot','Cool','red','green','blue','Spring','Summer','Autumn','Winter','Bone','Copper','Pink','Lines','colorcube','flag','prism','white'};
-            tool.handles.Tools.Color          =   uicontrol(tool.handles.Panels.Tools,'Style','popupmenu','String',mapNames,'Position',[lp buff 3.5*w w]);
-            fun=@(hObject,evnt) changeColormap(tool,[],hObject);
-            set(tool.handles.Tools.Color,'Callback',fun)
-            set(tool.handles.Tools.Color,'TooltipString','Select a colormap')
-            lp=lp+3.5*w+buff;
+            mapNames = {'Gray', 'Parula', 'Jet', 'HSV', 'Hot', 'Cool', 'red', 'green', 'blue', 'Spring', 'Summer', ...
+                'Autumn', 'Winter', 'Bone', 'Copper', 'Pink', 'Lines', 'colorcube', 'flag', 'prism', 'white'};
+            tool.handles.Tools.Color = uicontrol(tool.handles.Panels.Tools, 'Style', 'popupmenu', ...
+                'String', mapNames, 'Position', [lp buff 3.5*w w]);
+            fun = @(hObject, evnt) changeColormap(tool, [], hObject);
+            set(tool.handles.Tools.Color, 'Callback', fun);
+            set(tool.handles.Tools.Color, 'TooltipString', 'Select a colormap');
+            lp = lp+3.5*w+buff;
             
             %Create save button
-            tool.handles.Tools.Save           =   uicontrol(tool.handles.Panels.Tools,'Style','pushbutton','String','','Position',[lp buff w w]);
-            lp=lp+w+buff;
+            tool.handles.Tools.Save = uicontrol(tool.handles.Panels.Tools, 'Style', 'pushbutton', 'String', '', ...
+                'Position', [lp buff w w]);
+            lp = lp+w+buff;
             icon_save = makeToolbarIconFromPNG([MATLABicondir '/file_save.png']);
-            set(tool.handles.Tools.Save,'CData',icon_save);
-            fun=@(hObject,evnt) saveImage(tool,hObject);
-            set(tool.handles.Tools.Save,'Callback',fun)
-            set(tool.handles.Tools.Save,'TooltipString','Save screenshot')
+            set(tool.handles.Tools.Save, 'CData', icon_save);
+            fun = @(hObject, evnt) saveImage(tool, hObject);
+            set(tool.handles.Tools.Save, 'Callback', fun);
+            set(tool.handles.Tools.Save, 'TooltipString', 'Save screenshot');
             
             %Create viewplane button
-            tool.handles.Tools.ViewPlane    =   uicontrol(tool.handles.Panels.Tools,'Style','popupmenu','String',{'Axial','Sagittal','Coronal'},'Position',[lp buff 3.5*w w],'Value',4-tool.viewplane,'TooltipString','Select slicing plane orientation (for 3D volume)');
-            lp=lp+3.5*w+buff;
-            fun=@(hObject,evnt) setviewplane(tool,hObject);
-            set(tool.handles.Tools.ViewPlane,'Callback',fun)
+            tool.handles.Tools.ViewPlane = uicontrol(tool.handles.Panels.Tools, 'Style', 'popupmenu', ...
+                'String', {'Axial', 'Sagittal', 'Coronal'}, 'Position', [lp buff 3.5*w w], ...
+                'Value', 4-tool.viewplane, 'TooltipString', 'Select slicing plane orientation (for 3D volume)');
+            lp = lp+3.5*w+buff;
+            fun = @(hObject, evnt) setviewplane(tool, hObject);
+            set(tool.handles.Tools.ViewPlane, 'Callback', fun);
             
             %Create montage button
-            tool.handles.Tools.montage    =   uicontrol(tool.handles.Panels.Tools,'Style','togglebutton','Position',[lp buff w w],'Value',0,'TooltipString','display multiple slices as montage');
+            tool.handles.Tools.montage = uicontrol(tool.handles.Panels.Tools, 'Style', 'togglebutton', ...
+                'Position', [lp buff w w], 'Value', 0, 'TooltipString', 'display multiple slices as montage');
             icon_profile = makeToolbarIconFromPNG('icon_montage.png');
-            set(tool.handles.Tools.montage ,'Cdata',icon_profile)
-            lp=lp+w+buff;
-            fun=@(hObject,evnt) toggleMontage(hObject,[],tool); % show 12 slices by default
-            set(tool.handles.Tools.montage,'Callback',fun)
+            set(tool.handles.Tools.montage, 'Cdata', icon_profile);
+            lp = lp+w+buff; %#ok<NASGU>
+            fun = @(hObject, evnt) toggleMontage(hObject, [], tool);    % show 12 slices by default
+            set(tool.handles.Tools.montage, 'Callback', fun);
             
             %Create Help Button
-            pos = get(tool.handles.Panels.Tools,'Position');
-            tool.handles.Tools.Help             =   uicontrol(tool.handles.Panels.Tools,'Style','checkbox','String','Help','Position',[pos(3)-5*w buff 3*w-buff w],'BackgroundColor',[0, 0.65, 1],'ForegroundColor',[1 1 1],'FontWeight','bold');
-            fun = @(hObject,evnt) showhelpannotation(tool);
-            set(tool.handles.Tools.Help,'Callback',fun)
-            tool.handles.Tools.About             =   uicontrol(tool.handles.Panels.Tools,'Style','popupmenu','String',{'about','Settings','Dock figure','Export imtool object'},'Position',[pos(3)-2*w-buff buff 4*w w],'TooltipString','Help with imtool3D');
-            fun=@(hObject,evnt) displayHelp(hObject,evnt,tool);
-            set(tool.handles.Tools.About,'Callback',fun)
+            pos = get(tool.handles.Panels.Tools, 'Position');
+            tool.handles.Tools.Help = uicontrol(tool.handles.Panels.Tools, 'Style', 'checkbox', 'String', 'Help', ...
+                'Position', [pos(3)-5*w buff 3*w-buff w], 'BackgroundColor', [0, 0.65, 1], ...
+                'ForegroundColor', [1 1 1], 'FontWeight', 'bold');
+            fun = @(hObject, evnt) showhelpannotation(tool);
+            set(tool.handles.Tools.Help, 'Callback', fun);
+            tool.handles.Tools.About = uicontrol(tool.handles.Panels.Tools, 'Style', 'popupmenu', ...
+                'String', {'about', 'Settings', 'Dock figure', 'Export imtool object'}, ...
+                'Position', [pos(3)-2*w-buff buff 4*w w], 'TooltipString', 'Help with imtool3D');
+            fun = @(hObject, evnt) displayHelp(hObject, evnt, tool);
+            set(tool.handles.Tools.About, 'Callback', fun);
             
             %% MASK TOOLBAR ON RIGHT
             %Create mask2poly button
-            tool.handles.Tools.mask2poly             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff w w],'TooltipString','Mask2Poly');
+            tool.handles.Tools.mask2poly = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff w w], 'TooltipString', 'Mask2Poly');
             icon_profile = makeToolbarIconFromPNG([MATLABicondir '/linkproduct.png']);
-            set(tool.handles.Tools.mask2poly ,'Cdata',icon_profile)
-            fun=@(hObject,evnt) mask2polyImageCallback(hObject,evnt,tool);
-            set(tool.handles.Tools.mask2poly ,'Callback',fun)
-            addlistener(tool,'newSlice',@tool.SliceEvents);
+            set(tool.handles.Tools.mask2poly, 'Cdata', icon_profile)
+            fun = @(hObject, evnt) mask2polyImageCallback(hObject, evnt, tool);
+            set(tool.handles.Tools.mask2poly, 'Callback', fun);
+            addlistener(tool, 'newSlice', @tool.SliceEvents);
             
             %Create Circle ROI button
-            tool.handles.Tools.CircleROI           =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+w w w],'TooltipString','Create Elliptical ROI');
+            tool.handles.Tools.CircleROI = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff+w w w], 'TooltipString', 'Create Elliptical ROI');
             icon_ellipse = makeToolbarIconFromPNG([MATLABicondir '/tool_shape_ellipse.png']);
-            set(tool.handles.Tools.CircleROI,'Cdata',icon_ellipse)
-            fun=@(hObject,evnt) measureImageCallback(hObject,evnt,tool,'ellipse');
-            set(tool.handles.Tools.CircleROI,'Callback',fun)
+            set(tool.handles.Tools.CircleROI, 'Cdata', icon_ellipse);
+            fun = @(hObject, evnt) measureImageCallback(hObject, evnt, tool, 'ellipse');
+            set(tool.handles.Tools.CircleROI, 'Callback', fun);
             
             %Create Square ROI button
-            tool.handles.Tools.SquareROI           =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+2*w w w],'TooltipString','Create Rectangular ROI');
+            tool.handles.Tools.SquareROI = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff+2*w w w], 'TooltipString', 'Create Rectangular ROI');
             icon_rect = makeToolbarIconFromPNG([MATLABicondir '/tool_shape_rectangle.png']);
-            set(tool.handles.Tools.SquareROI,'Cdata',icon_rect)
-            fun=@(hObject,evnt) measureImageCallback(hObject,evnt,tool,'rectangle');
-            set(tool.handles.Tools.SquareROI,'Callback',fun)
+            set(tool.handles.Tools.SquareROI, 'Cdata', icon_rect);
+            fun = @(hObject, evnt) measureImageCallback(hObject, evnt, tool, 'rectangle');
+            set(tool.handles.Tools.SquareROI, 'Callback', fun);
             
             %Create Polygon ROI button
-            tool.handles.Tools.PolyROI             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','\_/','Position',[buff buff+3*w w w],'TooltipString','Create Polygon ROI');
-            fun=@(hObject,evnt) measureImageCallback(hObject,evnt,tool,'polygon');
-            set(tool.handles.Tools.PolyROI,'Callback',fun)
+            tool.handles.Tools.PolyROI = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '\_/', 'Position', [buff buff+3*w w w], 'TooltipString', 'Create Polygon ROI');
+            fun = @(hObject, evnt) measureImageCallback(hObject, evnt, tool, 'polygon');
+            set(tool.handles.Tools.PolyROI, 'Callback', fun);
             
             %Create line profile button
-            tool.handles.Tools.Ruler             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+4*w w w],'TooltipString','Measure Distance');
+            tool.handles.Tools.Ruler = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', 'String', '', ...
+                'Position', [buff buff+4*w w w], 'TooltipString', 'Measure Distance');
             icon_distance = makeToolbarIconFromPNG([MATLABicondir '/tool_line.png']);
-            set(tool.handles.Tools.Ruler,'CData',icon_distance);
-            fun=@(hObject,evnt) measureImageCallback(hObject,evnt,tool,'profile');
-            set(tool.handles.Tools.Ruler,'Callback',fun)
+            set(tool.handles.Tools.Ruler, 'CData', icon_distance);
+            fun = @(hObject, evnt) measureImageCallback(hObject, evnt, tool, 'profile');
+            set(tool.handles.Tools.Ruler, 'Callback', fun);
             
             %Create smooth3 button
-            tool.handles.Tools.smooth3             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+5*w w w],'TooltipString','Smooth Mask in 3D');
+            tool.handles.Tools.smooth3 = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff+5*w w w], 'TooltipString', 'Smooth Mask in 3D');
             icon_profile = makeToolbarIconFromPNG('icon_smooth3.png');
-            set(tool.handles.Tools.smooth3 ,'Cdata',icon_profile)
-            fun=@(hObject,evnt) smooth3Callback(hObject,evnt,tool);
-            set(tool.handles.Tools.smooth3 ,'Callback',fun)
+            set(tool.handles.Tools.smooth3, 'Cdata', icon_profile);
+            fun = @(hObject, evnt) smooth3Callback(hObject, evnt, tool);
+            set(tool.handles.Tools.smooth3, 'Callback', fun);
             
             %Create maskinterp button
-            tool.handles.Tools.maskinterp             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+6*w w w],'TooltipString','Interp Mask');
+            tool.handles.Tools.maskinterp = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff+6*w w w], 'TooltipString', 'Interp Mask');
             icon_profile = makeToolbarIconFromPNG('icon_interpmask.png');
-            set(tool.handles.Tools.maskinterp ,'Cdata',icon_profile)
-            fun=@(hObject,evnt) maskinterpImageCallback(hObject,evnt,tool);
-            set(tool.handles.Tools.maskinterp ,'Callback',fun)
+            set(tool.handles.Tools.maskinterp, 'Cdata', icon_profile);
+            fun = @(hObject, evnt) maskinterpImageCallback(hObject, evnt, tool);
+            set(tool.handles.Tools.maskinterp, 'Callback', fun);
             
             %Create active countour button
-            tool.handles.Tools.maskactivecontour             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+7*w w w],'TooltipString','Active Contour 3D');
+            tool.handles.Tools.maskactivecontour = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff+7*w w w], 'TooltipString', 'Active Contour 3D');
             icon_profile = makeToolbarIconFromPNG('icon_activecontour.png');
-            set(tool.handles.Tools.maskactivecontour ,'Cdata',icon_profile)
-            fun=@(hObject,evnt) ActiveContourCallback(hObject,evnt,tool);
-            set(tool.handles.Tools.maskactivecontour ,'Callback',fun)
-            addlistener(tool,'maskChanged',@tool.maskEvents);
-            addlistener(tool,'maskUndone',@tool.maskEvents);
+            set(tool.handles.Tools.maskactivecontour, 'Cdata', icon_profile);
+            fun = @(hObject, evnt) ActiveContourCallback(hObject, evnt, tool);
+            set(tool.handles.Tools.maskactivecontour, 'Callback', fun);
+            addlistener(tool, 'maskChanged', @tool.maskEvents);
+            addlistener(tool, 'maskUndone', @tool.maskEvents);
             
             %Paint brush tool button
-            tool.handles.Tools.PaintBrush        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','String','','Position',[buff buff+8*w w w],'TooltipString','Paint Brush Tool (B)');
+            tool.handles.Tools.PaintBrush = uicontrol(tool.handles.Panels.ROItools, 'Style', 'togglebutton', ...
+                'String', '', 'Position', [buff buff+8*w w w], 'TooltipString', 'Paint Brush Tool (B)');
             icon_profile = makeToolbarIconFromPNG([MATLABicondir '/tool_data_brush.png']);
-            set(tool.handles.Tools.PaintBrush ,'Cdata',icon_profile)
-            fun=@(hObject,evnt) PaintBrushCallback(hObject,evnt,tool,'Normal');
-            set(tool.handles.Tools.PaintBrush ,'Callback',fun)
-            tool.handles.PaintBrushObject=[];
+            set(tool.handles.Tools.PaintBrush, 'Cdata', icon_profile);
+            fun = @(hObject, evnt) PaintBrushCallback(hObject, evnt, tool, 'Normal');
+            set(tool.handles.Tools.PaintBrush, 'Callback', fun);
+            tool.handles.PaintBrushObject = [];
             
             %Smart Paint brush tool button
-            tool.handles.Tools.SmartBrush        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','String','','Position',[buff buff+9*w w w],'TooltipString','Smart Brush Tool (S)');
+            tool.handles.Tools.SmartBrush = uicontrol(tool.handles.Panels.ROItools, 'Style', 'togglebutton', ...
+                'String', '', 'Position', [buff buff+9*w w w], 'TooltipString', 'Smart Brush Tool (S)');
             icon_profile = makeToolbarIconFromPNG('tool_data_brush_smart.png');
-            set(tool.handles.Tools.SmartBrush ,'Cdata',icon_profile)
-            fun=@(hObject,evnt) PaintBrushCallback(hObject,evnt,tool,'Smart');
-            set(tool.handles.Tools.SmartBrush ,'Callback',fun)
+            set(tool.handles.Tools.SmartBrush, 'Cdata', icon_profile);
+            fun = @(hObject, evnt) PaintBrushCallback(hObject, evnt, tool, 'Smart');
+            set(tool.handles.Tools.SmartBrush, 'Callback', fun);
             
             %undo mask button
-            tool.handles.Tools.undoMask        = uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+10*w w w],'TooltipString','Undo (Z)');
+            tool.handles.Tools.undoMask = uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+                'String', '', 'Position', [buff buff+10*w w w], 'TooltipString', 'Undo (Z)');
             icon_profile = load([MATLABicondir filesep 'undo.mat']);
-            set(tool.handles.Tools.undoMask ,'Cdata',icon_profile.undoCData)
-            fun=@(hObject,evnt) maskUndo(tool);
-            set(tool.handles.Tools.undoMask ,'Callback',fun)
+            set(tool.handles.Tools.undoMask, 'Cdata', icon_profile.undoCData);
+            fun = @(hObject, evnt) maskUndo(tool);
+            set(tool.handles.Tools.undoMask, 'Callback', fun);
             
             %             %Create poly tool button
             %             tool.handles.Tools.mask2poly             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+8*w w w],'TooltipString','mask2poly');
@@ -762,51 +846,60 @@ classdef imtool3D < handle
             %             fun=@(hObject,evnt) CropImageCallback(hObject,evnt,tool);
             %             set(tool.handles.Tools.mask2poly ,'Callback',fun)
             
-            pos=get(tool.handles.Panels.ROItools,'Position');
+            pos = get(tool.handles.Panels.ROItools, 'Position');
             % mask selection
-            for islct=1:5
-                tool.handles.Tools.maskSelected(islct)        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','String',num2str(islct),'Position',[buff pos(4)-islct*w w w],'Tag','MaskSelected');
-                set(tool.handles.Tools.maskSelected(islct) ,'Cdata',repmat(permute(tool.maskColor(islct+1,:)*tool.alpha+(1-tool.alpha)*[.4 .4 .4],[3 1 2]),w,w))
-                set(tool.handles.Tools.maskSelected(islct) ,'Callback',@(hObject,evnt) setmaskSelected(tool,islct))
+            for(islct=1:5)
+                tool.handles.Tools.maskSelected(islct) = uicontrol(tool.handles.Panels.ROItools, ...
+                    'Style', 'togglebutton', 'String', num2str(islct), 'Position', [buff pos(4)-islct*w w w], ...
+                    'Tag', 'MaskSelected');
+                set(tool.handles.Tools.maskSelected(islct), 'Cdata', repmat(permute(tool.maskColor(islct+1,:) * ...
+                    tool.alpha+(1-tool.alpha)*[0.4 0.4 0.4], [3 1 2]), w, w));
+                set(tool.handles.Tools.maskSelected(islct), 'Callback', @(hObject, evnt) setmaskSelected(tool, islct));
                 c = uicontextmenu(tool.handles.fig);
-                set(tool.handles.Tools.maskSelected(islct),'UIContextMenu',c)
-                uimenu('Parent',c,'Label','delete','Callback',@(hObject,evnt) maskClean(tool,islct))
-                if islct == 5
-                    uimenu('Parent',c,'Label','Set value','Callback',@(hObject,evnt) maskCustomValue(tool))
+                set(tool.handles.Tools.maskSelected(islct), 'UIContextMenu', c);
+                uimenu('Parent', c, 'Label', 'delete', 'Callback', @(hObject, evnt) maskClean(tool, islct));
+                if(islct == 5)
+                    uimenu('Parent', c, 'Label', 'Set value', 'Callback', @(hObject, evnt) maskCustomValue(tool));
                 end
             end
             
             % lock mask
-            tool.handles.Tools.maskLock        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','Position',[buff pos(4)-(islct+1)*w w w], 'Value', 1, 'TooltipString', 'Protect other labels (except selected one)');
+            tool.handles.Tools.maskLock = uicontrol(tool.handles.Panels.ROItools, 'Style', 'togglebutton', ...
+                'Position', [buff pos(4)-(islct+1)*w w w], 'Value', 1, ...
+                'TooltipString', 'Protect other labels (except selected one)');
             icon_profile = makeToolbarIconFromPNG('icon_lock.png');
-            set(tool.handles.Tools.maskLock ,'Cdata',icon_profile)
-            set(tool.handles.Tools.maskLock ,'Callback',@(hObject,evnt) setlockMask(tool))
+            set(tool.handles.Tools.maskLock, 'Cdata', icon_profile);
+            set(tool.handles.Tools.maskLock, 'Callback', @(hObject, evnt) setlockMask(tool));
             
             % mask statistics
-            tool.handles.Tools.maskStats        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','Position',[buff pos(4)-(islct+2)*w w w], 'Value', 1, 'TooltipString', sprintf('Statistics in the different ROI\n(or in the whole volume if mask empty)'));
+            tool.handles.Tools.maskStats = uicontrol(tool.handles.Panels.ROItools, 'Style', 'togglebutton', ...
+                'Position', [buff pos(4)-(islct+2)*w w w], 'Value', 1, ...
+                'TooltipString', sprintf('Statistics in the different ROI\n(or in the whole volume if mask empty)'));
             icon_hist = makeToolbarIconFromPNG('plottype-histogram.png');
-            icon_hist = min(1,max(0,imresize_noIPT(icon_hist,[16 16])));
-            set(tool.handles.Tools.maskStats ,'Cdata',icon_hist)
-            set(tool.handles.Tools.maskStats ,'Callback',@(hObject,evnt) StatsCallback(hObject,evnt,tool))
+            icon_hist = min(1, max(0, imresize_noIPT(icon_hist, [16 16])));
+            set(tool.handles.Tools.maskStats, 'Cdata', icon_hist);
+            set(tool.handles.Tools.maskStats, 'Callback', @(hObject, evnt) StatsCallback(hObject, evnt, tool));
             
             % mask save
-            tool.handles.Tools.maskSave        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','Position',[buff pos(4)-(islct+3)*w w w], 'Value', 1, 'TooltipString', 'Save mask');
+            tool.handles.Tools.maskSave = uicontrol(tool.handles.Panels.ROItools, 'Style', 'togglebutton', ...
+                'Position', [buff pos(4)-(islct+3)*w w w], 'Value', 1, 'TooltipString', 'Save mask');
             icon_save = makeToolbarIconFromPNG([MATLABicondir '/file_save.png']);
-            icon_save = min(1,max(0,imresize_noIPT(icon_save,[16 16])));
-            set(tool.handles.Tools.maskSave ,'Cdata',icon_save)
-            fun=@(hObject,evnt) saveMask(tool,hObject);
-            set(tool.handles.Tools.maskSave ,'Callback',fun)
+            icon_save = min(1, max(0, imresize_noIPT(icon_save, [16 16])));
+            set(tool.handles.Tools.maskSave, 'Cdata', icon_save);
+            fun = @(hObject, evnt) saveMask(tool, hObject);
+            set(tool.handles.Tools.maskSave, 'Callback', fun);
             
             % mask load
-            tool.handles.Tools.maskLoad        = uicontrol(tool.handles.Panels.ROItools,'Style','togglebutton','Position',[buff pos(4)-(islct+4)*w w w], 'Value', 1, 'TooltipString', 'Load mask');
+            tool.handles.Tools.maskLoad = uicontrol(tool.handles.Panels.ROItools, 'Style', 'togglebutton', ...
+                'Position', [buff pos(4)-(islct+4)*w w w], 'Value', 1, 'TooltipString', 'Load mask');
             icon_load = makeToolbarIconFromPNG([MATLABicondir '/file_open.png']);
-            set(tool.handles.Tools.maskLoad ,'Cdata',icon_load)
-            fun=@(hObject,evnt) loadMask(tool,hObject);
-            set(tool.handles.Tools.maskLoad ,'Callback',fun)
+            set(tool.handles.Tools.maskLoad, 'Cdata', icon_load);
+            fun = @(hObject, evnt) loadMask(tool, hObject);
+            set(tool.handles.Tools.maskLoad, 'Callback', fun);
             
             %Set font size of all the tool objects
             try
-                set(cell2mat(struct2cell(tool.handles.Tools)),'FontSize',9,'Units','Pixels')
+                set(cell2mat(struct2cell(tool.handles.Tools)), 'FontSize', 9, 'Units', 'Pixels');
             catch ex
                 switch(ex.identifier)
                     case 'MATLAB:cell2mat:UnsupportedCellContent'
@@ -816,69 +909,70 @@ classdef imtool3D < handle
                 end
                 objarr=struct2cell(tool.handles.Tools);
                 objarr=[objarr{:}];
-                set(objarr,'FontSize',9,'Units','Pixels')
+                set(objarr, 'FontSize', 9, 'Units', 'Pixels');
             end
             
-            set(tool.handles.fig,'NextPlot','new')
+            set(tool.handles.fig, 'NextPlot', 'new');
             
             %%
             % add shortcuts
             
-            set(gcf,'Windowkeypressfcn', @(hobject, event) tool.shortcutCallback(event))
+            set(gcf, 'Windowkeypressfcn', @(hobject, event) tool.shortcutCallback(event));
             
             %run the reset view callback
-            resetViewCallback([],[],tool)
+            resetViewCallback([], [], tool);
             
             % Enable/Disable buttons based on mask
             tool.maskEvents;
             
             % set Image
-            setImage(tool, varargin{:})
+            setImage(tool, varargin{:});
             
             % disable ROI tools if no image processing toolbox
-            result = license('test','image_toolbox') && ~isempty(which('poly2mask.m'));
-            if result==0
-                warning('Image processing toolbox is missing... ROI tools will not work')
-                set(findobj(tool.handles.Panels.ROItools,'type','uicontrol'),'visible','off');
-                set(tool.handles.Tools.maskLoad,'visible','on');
-                set(tool.handles.Tools.maskStats,'visible','on');
-                set(tool.handles.Tools.maskSelected,'visible','on');
-                set(tool.handles.Tools.montage,'visible','on');
+            result = license('test', 'image_toolbox') && ~isempty(which('poly2mask.m'));
+            if(result==0)
+                warning('Image processing toolbox is missing... ROI tools will not work');
+                set(findobj(tool.handles.Panels.ROItools, 'type', 'uicontrol'), 'visible', 'off');
+                set(tool.handles.Tools.maskLoad, 'visible', 'on');
+                set(tool.handles.Tools.maskStats, 'visible', 'on');
+                set(tool.handles.Tools.maskSelected, 'visible', 'on');
+                set(tool.handles.Tools.montage, 'visible', 'on');
             end
             
             try
                 % Add Drag and Drop feature
                 %             txt_drop = annotation(tool.handles.Panels.Image,'textbox','Visible','off','EdgeColor','none','FontSize',25,'String','DROP!','Position',[0.5 0.5 0.6 0.1],'FitBoxToText','on','Color',[1 0 0]);
-                wrn = warning('off','MATLAB:ui:javaframe:PropertyToBeRemoved');
+                wrn = warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
                 jFrame = get(tool.handles.fig, 'JavaFrame');
                 jAxis = jFrame.getAxisComponent();
                 dndcontrol.initJava();
                 dndobj = dndcontrol(jAxis);
-                dndobj.DropFileFcn = @(s, e)onDrop(tool, s, e); %,'DragEnterFcn',@(s,e) setVis(txt_drop,1),'DragExitFcn',@(s,e) setVis(txt_drop,0));
+                dndobj.DropFileFcn = @(s, e) onDrop(tool, s, e);
+                %,'DragEnterFcn',@(s,e) setVis(txt_drop,1),'DragExitFcn',@(s,e) setVis(txt_drop,0));
                 warning(wrn);
-            catch err
+            catch ex
                 warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
         
         %% setPosition
-        function setPosition(tool,position)
+        function setPosition(tool, position)
             % tool.setPosition(position)
             % ex: tool.setPosition([0 0 1 .5])
-            set(tool.handles.Panels.Large,'Position',position)
+            set(tool.handles.Panels.Large, 'Position', position);
         end
         
         %% getPosition
         function position = getPosition(tool)
             % position = tool.getPosition()
-            position = get(tool.handles.Panels.Large,'Position');
+            position = get(tool.handles.Panels.Large, 'Position');
         end
         
         %% setUnits
-        function setUnits(tool,units)
+        function setUnits(tool, units)
             % tool.setUnits(units)
             % ex: tool.setUnits('pixels')
-            set(tool.handles.Panels.Large,'Units',units)
+            set(tool.handles.Panels.Large, 'Units', units);
         end
         
         %% getUnits
