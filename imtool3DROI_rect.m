@@ -286,8 +286,6 @@ classdef imtool3DROI_rect < imtool3DROI
                 if colMax > lims(2)
                     colMax = lims(2);
                 end
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
             BB = [rowMin rowMax; colMin colMax];
         end

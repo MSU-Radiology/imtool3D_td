@@ -355,8 +355,7 @@ classdef imtool3D < handle
                     'CheckboxState', 1, ...
                     'HelpString', 'Help', ...
                     'HelpFcn', @imtool3DHelpFcn);
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+            catch
                 Orient = 'vertical';
             end
             
@@ -390,8 +389,7 @@ classdef imtool3D < handle
                     ScreenSizeW = java.awt.Toolkit.getDefaultToolkit.getScreenSize.getWidth;
                     ScreenSizeH = java.awt.Toolkit.getDefaultToolkit.getScreenSize.getHeight;
                     screensize = [0 0 ScreenSizeW ScreenSizeH];
-                catch ex
-                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                catch
                     screensize = get(0, 'ScreenSize');
                 end
                 pos(3) = min(max(700, pos(3)), screensize(3)*0.9);
@@ -464,13 +462,7 @@ classdef imtool3D < handle
             try
                 set(cell2mat(struct2cell(tool.handles.Panels)), 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
                     'HighlightColor', 'k')
-            catch ex
-                switch(ex.identifier)
-                    case 'MATLAB:cell2mat:UnsupportedCellContent'
-                        % ignore
-                    otherwise
-                        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
-                end
+            catch
                 objarr=struct2cell(tool.handles.Panels);
                 objarr=[objarr{:}];
                 set(objarr, 'BackgroundColor', 'k', 'ForegroundColor', 'w', 'HighlightColor', 'k');
@@ -900,13 +892,7 @@ classdef imtool3D < handle
             %Set font size of all the tool objects
             try
                 set(cell2mat(struct2cell(tool.handles.Tools)), 'FontSize', 9, 'Units', 'Pixels');
-            catch ex
-                switch(ex.identifier)
-                    case 'MATLAB:cell2mat:UnsupportedCellContent'
-                        % ignore
-                    otherwise
-                        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
-                end
+            catch
                 objarr=struct2cell(tool.handles.Tools);
                 objarr=[objarr{:}];
                 set(objarr, 'FontSize', 9, 'Units', 'Pixels');
@@ -950,8 +936,8 @@ classdef imtool3D < handle
                 dndobj.DropFileFcn = @(s, e) onDrop(tool, s, e);
                 %,'DragEnterFcn',@(s,e) setVis(txt_drop,1),'DragExitFcn',@(s,e) setVis(txt_drop,0));
                 warning(wrn);
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+            catch err
+                warning(err.message);
             end
         end
         
@@ -1182,8 +1168,7 @@ classdef imtool3D < handle
                             pixdim = [1 1 1];
                             label = 'Paris multispectral (7 bands) LandSat';
                     end
-                catch ex % mri file not available
-                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                catch % mri file not available
                     S = [64 64 64];
                     pixdim = [1/S(1) 1/S(2) 1/S(3)];
                     phantom3 = phantom3d('Modified Shepp-Logan',S(1));
@@ -1255,8 +1240,7 @@ classdef imtool3D < handle
                 set(tool.handles.HistImage(1),'CData',repmat(tool.centers,[round(pos(4)) 1]),'XData',[min(tool.centers) max(tool.centers)]);
                 try
                     xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)])
-                catch ex
-                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                catch
                     xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)+.1])
                 end
                 set(tool.handles.HistImage,'XData',[1 256]);
@@ -1299,8 +1283,6 @@ classdef imtool3D < handle
             %Update the gridlines
             try
                 setupGrid(tool);
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
             
             % Create missing image objects
@@ -1399,8 +1381,7 @@ classdef imtool3D < handle
                 if isfield(tool.handles,'HistAxes')
                     try
                         xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)])
-                    catch ex
-                        warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                    catch
                         xlim(tool.handles.HistAxes,[tool.centers(1) tool.centers(end)+.1])
                     end
                     set(tool.handles.HistImageAxes,'Units','Pixels'); pos=get(tool.handles.HistImageAxes,'Position'); set(tool.handles.HistImageAxes,'Units','Normalized');
@@ -1552,8 +1533,6 @@ classdef imtool3D < handle
             setupSlider(tool)
             try
                 setupGrid(tool);
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
             
             
@@ -1952,8 +1931,6 @@ classdef imtool3D < handle
         function removeBrushObject(tool)
             try
                 delete(tool.handles.PaintBrushObject)
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
             tool.handles.PaintBrushObject=[];
         end
@@ -1966,8 +1943,6 @@ classdef imtool3D < handle
                 set(tool.handles.fig,'WindowButtonMotionFcn',[]);
                 H = tool.optdlg.getHandles();
                 delete(H.fig)
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
         
@@ -2310,8 +2285,7 @@ classdef imtool3D < handle
             if strfind(imformats{ext,2},'slice') % Current slice
                 try
                     I = getframe(h.Axes(tool.Nvol)); I = I.cdata;
-                catch ex
-                    warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
+                catch
                     I=get(h.I,'CData');
                 end
                 if iscell(I), I = I{tool.Nvol}; end
@@ -2654,14 +2628,13 @@ classdef imtool3D < handle
             set(tool.handles.mask,'AlphaData',alphaLayer)
             
             % Update Label
-            if(inbounds(tool.label, tool.Nvol))
+            try
                 label = tool.label{tool.Nvol};
-            else
+                if length(label)>70
+                    label =  ['..' label(max(1,length(label)-70):end)];
+                end
+            catch
                 label = '';
-            end
-            
-            if length(label)>70
-                label =  ['..' label(max(1,length(label)-70):end)];
             end
                 
             set(tool.handles.LabelText,'String',label)
@@ -2802,8 +2775,6 @@ classdef imtool3D < handle
                 set(tool.handles.Histrange(1),'XData',[L-W/2 L-W/2 L-W/2])
                 set(tool.handles.Histrange(2),'XData',[L+W/2 L+W/2 L+W/2])
                 set(tool.handles.Histrange(3),'XData',[L L L])
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
             end
         end
         
@@ -3264,8 +3235,6 @@ try
     drawnow;
     set(hObject, 'Enable', 'on');
     warning on
-catch ex
-    warning(ex.identifier, '%s', ex.message);
 end
 
 tool.montage = get(hObject,'Value');
@@ -3706,8 +3675,6 @@ try
     set(hh.Tools.maskLoad,'Position',[buff pos(4)-buff-(islct+4)*wbutt wbutt wbutt]);
     
     set(hh.Axes,'XLimMode','manual','YLimMode','manual');
-catch ex
-    warning(ex.identifier, '%s', ex.message);
 end
 end
 
