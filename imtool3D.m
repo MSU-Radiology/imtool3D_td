@@ -2560,15 +2560,16 @@ classdef imtool3D < handle
             set(tool.handles.mask,'AlphaData',alphaLayer)
             
             % Update Label
-            try
+            if(inbounds(tool.label, tool.Nvol))
                 label = tool.label{tool.Nvol};
-                if length(label)>70
-                    label =  ['..' label(max(1,length(label)-70):end)];
-                end
-            catch ex
-                warning(ex.identifier, '%s\n%s', ex.identifier, ex.message);
-                label='';
+            else
+                label = '';
             end
+            
+            if length(label)>70
+                label =  ['..' label(max(1,length(label)-70):end)];
+            end
+                
             set(tool.handles.LabelText,'String',label)
             set(tool.handles.SliceText,'String',['Vol: ' num2str(tool.Nvol) '/' num2str(length(tool.I)) '    Time: ' num2str(tool.Ntime) '/' num2str(size(tool.I{tool.Nvol},4)) '    Slice: ' num2str(n) '/' num2str(size(tool.I{tool.Nvol},tool.viewplane)) '    ' sprintf('%.1f%%',tool.rescaleFactor*100)])
             
@@ -4275,4 +4276,11 @@ function imtool3DHelpFcn()
         '', ...
         ['Orientation can also be changed while viewing an image using the command: ', ...
         'tool.setOrient(''vertical'')']});
+end
+
+%% inbounds
+function out = inbounds(myCellArray, indices)
+    % Source code obtained from:
+    % https://www.mathworks.com/matlabcentral/answers/342174-test-for-within-cell-array-boundaries
+    out = all(size(myCellArray) >= indices(:)');
 end
