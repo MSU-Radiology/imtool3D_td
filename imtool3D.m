@@ -3255,7 +3255,7 @@ function [I, position, h, range, tools, mask, enableHist] = parseinputs(varargin
     mask = [];
     enableHist = true;
     
-    switch(length(varargin))
+    switch(nargin)
         case 0  %tool = imtool3d()
             % Do nothing, defaults are ok
         case 1  %tool = imtool3d(I)
@@ -3293,6 +3293,10 @@ function [I, position, h, range, tools, mask, enableHist] = parseinputs(varargin
             tools = varargin{5};
             mask = varargin{6};
             enableHist = varargin{7};
+    end
+    
+    if isempty(position)
+        position=[0 0 1 1];
     end
 end
 
