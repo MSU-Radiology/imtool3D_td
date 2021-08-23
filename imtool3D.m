@@ -831,12 +831,13 @@ classdef imtool3D < handle
             fun = @(hObject, evnt) maskUndo(tool);
             set(tool.handles.Tools.undoMask, 'Callback', fun);
             
-            %             %Create poly tool button
-            %             tool.handles.Tools.mask2poly             =   uicontrol(tool.handles.Panels.ROItools,'Style','pushbutton','String','','Position',[buff buff+8*w w w],'TooltipString','mask2poly');
-            %             icon_profile = makeToolbarIconFromPNG([MATLABdir '/linkproduct.png']);
-            %             set(tool.handles.Tools.mask2poly ,'Cdata',icon_profile)
-            %             fun=@(hObject,evnt) CropImageCallback(hObject,evnt,tool);
-            %             set(tool.handles.Tools.mask2poly ,'Callback',fun)
+            % %Create poly tool button
+            % tool.handles.Tools.mask2poly =   uicontrol(tool.handles.Panels.ROItools, 'Style', 'pushbutton', ...
+            %     'String', '', 'Position', [buff buff+8*w w w], 'TooltipString', 'mask2poly');
+            % icon_profile = makeToolbarIconFromPNG([MATLABdir '/linkproduct.png']);
+            % set(tool.handles.Tools.mask2poly ,'Cdata',icon_profile)
+            % fun=@(hObject,evnt) CropImageCallback(hObject,evnt,tool);
+            % set(tool.handles.Tools.mask2poly ,'Callback',fun)
             
             pos = get(tool.handles.Panels.ROItools, 'Position');
             % mask selection
@@ -927,7 +928,9 @@ classdef imtool3D < handle
             
             try
                 % Add Drag and Drop feature
-                %             txt_drop = annotation(tool.handles.Panels.Image,'textbox','Visible','off','EdgeColor','none','FontSize',25,'String','DROP!','Position',[0.5 0.5 0.6 0.1],'FitBoxToText','on','Color',[1 0 0]);
+                % 	  txt_drop = annotation(tool.handles.Panels.Image, 'textbox', 'Visible', 'off', ...
+                %     'EdgeColor', 'none', 'FontSize', 25, 'String', 'DROP!', 'Position', [0.5 0.5 0.6 0.1], ...
+                %     'FitBoxToText', 'on', 'Color', [1 0 0]);
                 wrn = warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
                 jFrame = get(tool.handles.fig, 'JavaFrame'); %#ok<JAVFM>
                 jAxis = jFrame.getAxisComponent();
@@ -3244,11 +3247,12 @@ end
 
 %% CropImageCallback
 % function CropImageCallback(hObject,evnt,tool)
-% [I2 rect] = imcrop(tool.handles.Axes);
-% rect=round(rect);
-% mask = getMask(tool);
-% range=getDisplayRange(tool);
-% setImage(tool, tool.I(rect(2):rect(2)+rect(4)-1,rect(1):rect(1)+rect(3)-1,:),range,mask(rect(2):rect(2)+rect(4)-1,rect(1):rect(1)+rect(3)-1,:))
+%     [I2 rect] = imcrop(tool.handles.Axes);
+%     rect=round(rect);
+%     mask = getMask(tool);
+%     range=getDisplayRange(tool);
+%     setImage(tool, tool.I(rect(2):rect(2)+rect(4)-1, rect(1):rect(1)+rect(3)-1, :), range, ...
+%         mask(rect(2):rect(2)+rect(4)-1, rect(1):rect(1)+rect(3)-1, :));
 % end
 
 %% parseinputs
