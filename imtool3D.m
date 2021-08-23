@@ -473,7 +473,7 @@ classdef imtool3D < handle
             tool.handles.SliderColor = uicontrol(tool.handles.Panels.Slider, 'Style', 'pushbutton', ...
                 'String', butString{1}, 'Position', [max(0,w-wbutt) 0 wbutt wbutt], ...
                 'TooltipString', sprintf(['Color channel used by slider:\n.  channels are split\nR  ', ...
-                    'slider control red\nG  slider control green\nB  slider control Blue']));
+                'slider control red\nG  slider control green\nB  slider control Blue']));
             fun=@(src, evnt) SelectSliderColor(tool);
             c = uicontextmenu(tool.handles.fig);
             set(tool.handles.SliderColor, 'Callback', fun, 'UIContextMenu', c);
@@ -620,21 +620,21 @@ classdef imtool3D < handle
             tool.handles.Tools.TL = uicontrol(tool.handles.Panels.Tools, 'Style', 'text', 'String', 'L', ...
                 'Position', [lp+buff buff w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
                 'TooltipString', sprintf(['Intensity Window Lower Bound\nRight Click to set current window to ', ...
-                    'all volumes\n(left click and drag on the image to control window width and level)']));
+                'all volumes\n(left click and drag on the image to control window width and level)']));
             tool.handles.Tools.L = uicontrol(tool.handles.Panels.Tools, 'Style', 'Edit', 'String', '0', ...
                 'Position', [lp+buff+w buff 2*w w], ...
                 'TooltipString', sprintf(['Intensity Window Lower Bound\nRight Click to set current window to ', ...
-                    'all volumes\n(left click and drag on the image to control window width and level)']), ...
-                    'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
+                'all volumes\n(left click and drag on the image to control window width and level)']), ...
+                'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
             tool.handles.Tools.TU = uicontrol(tool.handles.Panels.Tools, 'Style', 'text', 'String', 'U', ...
                 'Position', [lp+2*buff+3*w buff w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
                 'TooltipString', sprintf(['Intensity Window Upper Bound\nRight Click to set current window to ', ...
-                    'all volumes\n(left click and drag on the image to control window width and level)']));
+                'all volumes\n(left click and drag on the image to control window width and level)']));
             tool.handles.Tools.U = uicontrol(tool.handles.Panels.Tools, 'Style', 'Edit', 'String', '1', ...
                 'Position', [lp+2*buff+4*w buff 2*w w], ...
                 'TooltipString', sprintf(['Intensity Window Upper Bound\nRight Click to set current window to ', ...
-                    'all volumes\n(left click and drag on the image to control window width and level)']), ...
-                    'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
+                'all volumes\n(left click and drag on the image to control window width and level)']), ...
+                'BackgroundColor', [0.2 0.2 0.2], 'ForegroundColor', 'w');
             tool.handles.Tools.TO = uicontrol(tool.handles.Panels.Tools, 'Style', 'text', 'String', 'O', ...
                 'Position', [lp+2*buff+6*w buff w w], 'BackgroundColor', 'k', 'ForegroundColor', 'w', ...
                 'TooltipString', sprintf('Opacity'));
@@ -667,7 +667,7 @@ classdef imtool3D < handle
             tool.handles.Tools.ViewRestore = uicontrol(tool.handles.Panels.Tools, 'Style', 'pushbutton', ...
                 'String', '', 'Position', [lp buff w w], ...
                 'TooltipString', sprintf(['Reset Pan and Zoom\n(Right Click (Ctrl+Click) to Pan and Middle ', ...
-                    '(Shift+Click) Click to zoom)']));
+                '(Shift+Click) Click to zoom)']));
             icon_save = makeToolbarIconFromPNG('overview_zoom_in.png');
             set(tool.handles.Tools.ViewRestore, 'CData', icon_save);
             fun = @(hobject, evnt) resetViewCallback(hobject, evnt, tool);
@@ -929,7 +929,7 @@ classdef imtool3D < handle
                 % Add Drag and Drop feature
                 %             txt_drop = annotation(tool.handles.Panels.Image,'textbox','Visible','off','EdgeColor','none','FontSize',25,'String','DROP!','Position',[0.5 0.5 0.6 0.1],'FitBoxToText','on','Color',[1 0 0]);
                 wrn = warning('off', 'MATLAB:ui:javaframe:PropertyToBeRemoved');
-                jFrame = get(tool.handles.fig, 'JavaFrame');
+                jFrame = get(tool.handles.fig, 'JavaFrame'); %#ok<JAVFM>
                 jAxis = jFrame.getAxisComponent();
                 dndcontrol.initJava();
                 dndobj = dndcontrol(jAxis);
@@ -1073,7 +1073,7 @@ classdef imtool3D < handle
             % tool.maskClean(islct)
             % ex: tool.maskClean(1)  set mask to 0 for index '1'
             if(islct == 5)
-                islct = str2num(get(tool.handles.Tools.maskSelected(5), 'String'));
+                islct = str2double(get(tool.handles.Tools.maskSelected(5), 'String'));
             end
             
             tool.mask(tool.mask == islct) = 0;
@@ -1085,12 +1085,12 @@ classdef imtool3D < handle
         function maskCustomValue(tool, islct)
             % tool.maskCustomValue(islct) sets a new label islct
             % ex: tool.maskCustomValue(3)
-            if(nargin<2)
+            if(nargin < 2)
                 islct = inputdlg('Mask Value');
-                if(isempty(islct) || isempty(str2num(islct{1})))
+                if(isempty(islct) || isempty(str2double(islct{1})))
                     return
                 else
-                    islct = str2num(islct{1});
+                    islct = str2double(islct{1});
                     islct = floor(islct(1));
                 end
             end
@@ -1107,7 +1107,7 @@ classdef imtool3D < handle
         %% setmaskSelected
         function setmaskSelected(tool, islct)
             if(islct == 5)
-                tool.maskSelected = str2num(get(tool.handles.Tools.maskSelected(5), 'String'));
+                tool.maskSelected = str2double(get(tool.handles.Tools.maskSelected(5), 'String'));
             else
                 tool.maskSelected = islct;
             end
@@ -1181,7 +1181,7 @@ classdef imtool3D < handle
                     Orient = getOrient(tool);
                     switch(abs(Orient) > 45)
                         case 1 % medical
-                            load mri;
+                            load('mri', 'D');
                             phantom3 = squeeze(D);
                             phantom3 = permute(phantom3(end:-1:1, :, :), [2 1 3]);  % LPI orientation
                             S = size(phantom3);
@@ -1241,7 +1241,12 @@ classdef imtool3D < handle
                 end
             end
             tool.NvolOpts.Climits = tool.range;
-            tool.NvolOpts.Opacity = mat2cell(ones(1, length(I)), 1, ones(1, length(I)));
+            
+            % I believe the call to num2cell below is equivalent to the original mat2cell call but am keeping the
+            % original line of code as a comment for a while to ensure that if bugs pop up that it can easily be
+            % reversed without having to dig through the commit history in version control.  -Matt  8/19/2021
+            tool.NvolOpts.Opacity = num2cell(ones(1, length(I)), 1);
+            %             tool.NvolOpts.Opacity = mat2cell(ones(1, length(I)), 1, ones(1, length(I)));
             tool.NvolOpts.Cmap = tool.NvolOpts.Opacity;
             
             if(~isempty(range))
@@ -1393,7 +1398,7 @@ classdef imtool3D < handle
             % save window and level
             if(saveClim)
                 tool.NvolOpts.Climits{tool.Nvol} = get(tool.handles.Axes(tool.Nvol), 'Clim');
-                tool.NvolOpts.Opacity{tool.Nvol} = str2num(get(tool.handles.Tools.O, 'String'));
+                tool.NvolOpts.Opacity{tool.Nvol} = str2double(get(tool.handles.Tools.O, 'String'));
                 tool.NvolOpts.Cmap{tool.Nvol} = get(tool.handles.Tools.Color, 'Value');
             end
             childrenObj = get(tool.handles.Axes(tool.Nvol), 'Children');
@@ -1641,7 +1646,7 @@ classdef imtool3D < handle
             if(~exist('O', 'var') || isempty(O))
                 switch(get(hObject, 'Style'))
                     case 'edit'
-                        O = str2num(get(hObject, 'String'));
+                        O = str2double(get(hObject, 'String'));
                     case 'slider'
                         O = get(hObject, 'Value');
                 end
@@ -2767,7 +2772,7 @@ classdef imtool3D < handle
             catch
                 label = '';
             end
-                
+            
             set(tool.handles.LabelText, 'String', label);
             set(tool.handles.SliceText, 'String', ['Vol: ', num2str(tool.Nvol), '/', num2str(length(tool.I)), ...
                 '    Time: ', num2str(tool.Ntime), '/', num2str(size(tool.I{tool.Nvol}, 4)), '    Slice: ', ...
@@ -2970,7 +2975,7 @@ classdef imtool3D < handle
                 I = tool.getImage;
                 for(ii = 1:length(tool.handles.Tools.maskSelected))
                     if(ii == 5)
-                        iival = str2num(get(tool.handles.Tools.maskSelected(5), 'String'));
+                        iival = str2double(get(tool.handles.Tools.maskSelected(5), 'String'));
                     else
                         iival = ii;
                     end
@@ -3065,7 +3070,7 @@ function StatsCallback(hObject, ~, tool)
     set(hObject, 'Enable', 'off');
     drawnow;
     set(hObject, 'Enable', 'on');
-
+    
     if(tool.isRGB && tool.RGBdim == 3)
         Color = [0 0 0; 1 0 0; 0 1 0; 0 0 1];
         S = tool.getImageSize(0);
@@ -3082,12 +3087,12 @@ function StatsCallback(hObject, ~, tool)
         'UniformOutput', false);
     EmptyFields = cellfun(@(x) ['vol #' x], strsplit(num2str(1:length(tool.I))), 'uni', 0);
     label(cellfun(@(X) isempty(X), label)) = EmptyFields(cellfun(@(X) isempty(X), label));
-
+    
     % Open Stats figure
     f1 = StatsGUI(tool.I, Mask, label(end:-1:1), Color);
     % Open Histogram figure
     f2 = HistogramGUI(tool.getImage(0), Mask, Color);
-
+    
     pos = get(f1,'Position');
     name = 'Statistics';
     if(length(tool.I) > 1)
@@ -3125,31 +3130,33 @@ end
 
 %% mask2polyImageCallback
 function mask2polyImageCallback(~, ~, tool)
-h = getHandles(tool);
-mask = tool.getCurrentMaskSlice(0);
-mask = imfill(mask, 'holes');
-if(any(mask(:)))
-    [labels, num] = bwlabel(mask);
-    
-    % TODO: Preallocate P variable
-    for(ilab=1:num)
-        labelilab = labels == ilab;
-        if(sum(labelilab(:)) > 15)
-            P = bwboundaries(labelilab);
-            P = P{1};
-            P = P(:, [2 1]);
-            if(size(P, 1) > 16)
-                P = reduce_poly(P(2:end, :)', max(6, round(size(P, 1)/15)));
-                P(:, end+1)=P(:, 1);
-            end
-            
-            if(~isempty(P))
-                imtool3DROI_poly(h.I(tool.Nvol), P', tool);
+    h = getHandles(tool);
+    mask = tool.getCurrentMaskSlice(0);
+    mask = imfill(mask, 'holes');
+    if(any(mask(:)))
+        [labels, num] = bwlabel(mask);
+        
+        for(ilab=1:num)
+            labelilab = labels == ilab;
+            if(sum(labelilab(:)) > 15)
+                P = bwboundaries(labelilab);
+                P = P{1};
+                P = P(:, [2 1]);
+                if(size(P, 1) > 16)
+                    P = reduce_poly(P(2:end, :)', max(6, round(size(P, 1)/15)));
+                    
+                    % Predetermining the size of P is complicated and P is generally small enough that changing its
+                    % size doesn't appear to have a significant performance impact, so suppressing the MATLAB
+                    % editor's warning instead of trying to fix this
+                    P(:, end+1) = P(:, 1); %#ok<AGROW>
+                end
+                
+                if(~isempty(P))
+                    imtool3DROI_poly(h.I(tool.Nvol), P', tool);
+                end
             end
         end
     end
-end
-
 end
 
 %% smooth3Callback
@@ -4298,15 +4305,15 @@ function e = modified_shepp_logan
     %    A      a           b           c           x0          y0          z0      phi     theta   psi
     %    -----------------------------------------------------------------------------------------------
     e = [1      0.6900      0.920       0.810       0           0           0       0       0       0
-        -0.8    0.6624      0.874       0.780       0          -0.0184      0       0       0       0
-        -0.2    0.1100      0.310       0.220       0.22        0           0      -18      0       10
-        -0.2    0.1600      0.410       0.280      -0.22        0           0       18      0       10
-         0.1    0.2100      0.250       0.410       0           0.35       -0.15    0       0       0
-         0.1    0.0460      0.046       0.050       0           0.1         0.25    0       0       0
-         0.1    0.0460      0.046       0.050       0          -0.1         0.25    0       0       0
-         0.1    0.0460      0.023       0.050      -0.08       -0.605       0       0       0       0
-         0.1    0.0230      0.023       0.020       0          -0.606       0       0       0       0
-         0.1    0.0230      0.046       0.020       0.06       -0.605       0       0       0       0 ];
+       -0.8     0.6624      0.874       0.780       0          -0.0184      0       0       0       0
+       -0.2     0.1100      0.310       0.220       0.22        0           0      -18      0       10
+       -0.2     0.1600      0.410       0.280      -0.22        0           0       18      0       10
+        0.1     0.2100      0.250       0.410       0           0.35       -0.15    0       0       0
+        0.1     0.0460      0.046       0.050       0           0.1         0.25    0       0       0
+        0.1     0.0460      0.046       0.050       0          -0.1         0.25    0       0       0
+        0.1     0.0460      0.023       0.050      -0.08       -0.605       0       0       0       0
+        0.1     0.0230      0.023       0.020       0          -0.606       0       0       0       0
+        0.1     0.0230      0.046       0.020       0.06       -0.605       0       0       0       0 ];
 end
 
 %% yu_ye_wang
@@ -4317,15 +4324,15 @@ function e = yu_ye_wang
     %    A      a           b           c           x0          y0          z0      phi     theta   psi
     %    -----------------------------------------------------------------------------------------------
     e = [1      0.6900      0.920       0.900       0           0           0       0       0       0
-        -0.8    0.6624      0.874       0.880       0           0           0       0       0       0
-        -0.2    0.4100      0.160       0.210      -0.22        0          -0.25    108     0       0
-        -0.2    0.3100      0.110       0.220       0.22        0          -0.25    72      0       0
-         0.2    0.2100      0.250       0.500       0           0.35       -0.25    0       0       0
-         0.2    0.0460      0.046       0.046       0           0.1        -0.25    0       0       0
-         0.1    0.0460      0.023       0.020      -0.08       -0.65       -0.25    0       0       0
-         0.1    0.0460      0.023       0.020       0.06       -0.65       -0.25    90      0       0
-         0.2    0.0560      0.040       0.100       0.06       -0.105       0.625   90      0       0
-        -0.2    0.0560      0.056       0.100       0           0.100       0.625   0       0       0 ];
+       -0.8     0.6624      0.874       0.880       0           0           0       0       0       0
+       -0.2     0.4100      0.160       0.210      -0.22        0          -0.25    108     0       0
+       -0.2     0.3100      0.110       0.220       0.22        0          -0.25    72      0       0
+        0.2     0.2100      0.250       0.500       0           0.35       -0.25    0       0       0
+        0.2     0.0460      0.046       0.046       0           0.1        -0.25    0       0       0
+        0.1     0.0460      0.023       0.020      -0.08       -0.65       -0.25    0       0       0
+        0.1     0.0460      0.023       0.020       0.06       -0.65       -0.25    90      0       0
+        0.2     0.0560      0.040       0.100       0.06       -0.105       0.625   90      0       0
+       -0.2     0.0560      0.056       0.100       0           0.100       0.625   0       0       0 ];
 end
 
 %% imagemontage
